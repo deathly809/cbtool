@@ -22,7 +22,7 @@ AZS_KEY_NAME_DEFAULT = foo,bar
 AZS_LOGIN_DOC = username to which your ssh key corresponds
 AZS_LOGIN_DEFAULT = root
 
-AZS_SSH_KEY_NAME_DOC = Name of the ssh key from azure.com
+AZS_SSH_KEY_NAME_DOC = Name of the ssh key from AzureStack
 AZS_SSH_KEY_NAME_DEFAULT = cbtool_rsa
 
 AZS_NETNAME_DOC = Use the public or private network for benchmark traffic. For more complex networks, refer to the documentation.
