@@ -39,7 +39,7 @@ CLOUDOPTION_MYAS = cldattach os, vmcattach all
 [USER-DEFINED : CLOUDOPTION_MYAZS]
 AZS_ACCESS = https://<address>
 AZS_CREDENTIALS = arbitrarytag1:subscription_id1+certificate_path1,arbitrarytag2:subscription_id2+certificate_path2   # The subscription id is obtained from the Azure portal. The certificate is generated locally and uploaded through the portal,
-AZS_INITIAL_VMCS = redmond                                                                                            # Use four consecutives underscores (____) to indicate a space in the name
+AZS_INITIAL_VMCS = <fillin>                                                                                           # Use four consecutives underscores (____) to indicate a space in the name
 AZS_NETNAME = public                                                                                                  # Currently not used
 AZS_SSH_KEY_NAME = cbtool_rsa                                                                                         # Name of the private/public key pair - locally available - used to login on the VMs
 AZS_KEY_NAME = cbtool_rsa                                                                                             # Name of the private key present in the cloud to be injected on VMs
