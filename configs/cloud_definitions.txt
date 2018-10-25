@@ -8,12 +8,12 @@ MAIN_ATTEMPTS = 3
 MAIN_TIMEOUT = 240
 # Variable $USER auto-selects current username
 MAIN_USERNAME = $USER_AUTO
-# Name of the ssh key pair (two files are supposed to exist inside the 
+# Name of the ssh key pair (two files are supposed to exist inside the
 # "credentials" directory, bogus_id_rsa and bogus_id_rsa.pub
 MAIN_SSH_KEY_NAME = bogus_id_rsa
 # This is the username created inside the VMs
 MAIN_LOGIN = cbuser
-# Variable $PATH_TO_TOOL attempts to auto-selects the appropriate path 
+# Variable $PATH_TO_TOOL attempts to auto-selects the appropriate path
 MAIN_BASE_DIR = $PATH_TO_TOOL
 
 # Which cloud to pick first when the tool first starts
@@ -21,6 +21,7 @@ STARTUP_CLOUD = MYSIMCLOUD
 
 # List the clouds you want to define
 CLOUDOPTION_MYSIMCLOUD = cldattach sim, vmcattach all
+CLOUDOPTION_MYAZS = cldattach azs, vmcattach all
 CLOUDOPTION_MYOPENSTACK = cldattach osk, vmcattach all
 CLOUDOPTION_MYAMAZON = cldattach ec2, vmcattach all
 CLOUDOPTION_MYVCD = cldattach vcd, vmcattach all
@@ -35,11 +36,19 @@ CLOUDOPTION_MYAS = cldattach os, vmcattach all
 
 # START: Specify the individual parameters for each cloud
 #-------------------------------------------------------------------------------
+[USER-DEFINED : CLOUDOPTION_MYAZS]
+AS_CREDENTIALS = arbitrarytag1:subscription_id1+certificate_path1,arbitrarytag2:subscription_id2+certificate_path2   # The subscription id is obtained from the Azure portal. The certificate is generated locally and uploaded through the portal,
+AS_INITIAL_VMCS = redmond                                                                                            # Use four consecutives underscores (____) to indicate a space in the name
+AS_NETNAME = public                                                                                                  # Currently not used
+AS_SSH_KEY_NAME = cbtool_rsa                                                                                         # Name of the private/public key pair - locally available - used to login on the VMs
+AS_KEY_NAME = cbtool_rsa                                                                                             # Name of the private key present in the cloud to be injected on VMs
+AS_LOGIN = cbuser                                                                                                    # The username that logins on the VMs
+#-------------------------------------------------------------------------------
 # Smart Cloud Provisioning (SCP) requires the following parameters
 [USER-DEFINED : CLOUDOPTION_MYSIMCLOUD]
 SIM_INITIAL_VMCS = simzone_a:sut,simzone_b:lg
 SIM_SSH_KEY_NAME = cbtool_rsa
-SIM_KEY_NAME = cbtool_rsa 
+SIM_KEY_NAME = cbtool_rsa
 SIM_SECURITY_GROUPS = simsecgrp
 SIM_LOGIN = cbuser
 #-------------------------------------------------------------------------------
@@ -51,12 +60,12 @@ OSK_SECURITY_GROUPS = default	                           # Make sure that this g
 OSK_INITIAL_VMCS = RegionOne:sut                           # Change "RegionOne" accordingly
 OSK_LOGIN = cbuser                                         # The username that logins on the VMs
 #-------------------------------------------------------------------------------
-# Elastic Compute Cloud (EC2) requires the following parameters 
+# Elastic Compute Cloud (EC2) requires the following parameters
 [USER-DEFINED : CLOUDOPTION_MYAMAZON]
 EC2_ACCESS = ABCDEFGHIJKLMNOPQRST                          # This is the AWS access key id
-EC2_SECURITY_GROUPS = cloudbench                           # Make sure that this group exists first 
-EC2_CREDENTIALS = ABCDEFGHIJKLMNOPQRSTUVXYWZ01234567890-+* # This is the AWS secret access key 
-EC2_KEY_NAME = cbtool_rsa                                  # Make sure that this key exists first 
+EC2_SECURITY_GROUPS = cloudbench                           # Make sure that this group exists first
+EC2_CREDENTIALS = ABCDEFGHIJKLMNOPQRSTUVXYWZ01234567890-+* # This is the AWS secret access key
+EC2_KEY_NAME = cbtool_rsa                                  # Make sure that this key exists first
 EC2_INITIAL_VMCS = us-east-1:sut                           # Change "us-east-1" accordingly
 EC2_SSH_KEY_NAME = cbtool_rsa                              # Name of the private key used to login on the VMs
 EC2_LOGIN = cbuser                                         # The username that logins on the VMs
@@ -75,14 +84,14 @@ VCD_SNMP_PASSWORD = dummy
 VCD_SNMP_COMMUNITY = cbtest
 VCD_SNMP_VARIABLE = SNMPv2-MIB::sysLocation
 #-------------------------------------------------------------------------------
-# Parallel Libvirt Manager (PLM) requires the following parameters 
+# Parallel Libvirt Manager (PLM) requires the following parameters
 [USER-DEFINED : CLOUDOPTION_MYPLM]
 PLM_ACCESS = <address>:6060
 PLM_INITIAL_VMCS = grouptwo:sut
 PLM_SSH_KEY_NAME = cbtool_rsa
 PLM_LOGIN = cbuser
 #-------------------------------------------------------------------------------
-# SoftLayer (SLR) requires the following parameters 
+# SoftLayer (SLR) requires the following parameters
 [USER-DEFINED : CLOUDOPTION_MYSLR ]
 SLR_ACCESS = private                                                                            # Leave "private" if you are running inside SoftLayer
 SLR_CREDENTIALS = <username>-ABCDEFGHIJKLMNOPQRSTUVXYWZ01234567890-+*0123456789001234567890-cci # User and API access key can be obtained from https://manage.softlayer.com/Administrative/apiKeychain

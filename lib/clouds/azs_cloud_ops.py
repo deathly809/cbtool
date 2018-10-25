@@ -202,6 +202,8 @@ class AzsCmds(CommonCloudFunctions):
             VMC (i.e., Virtual Machine Container, one of the four Concrete Objects).
 
         Notes:
+            Does NOTHING with allocating resources, only cleanup at most.
+
             If supported by the Cloud's API (e.g., OpenStack), individual host discovery is performed within this method.
 
             May invoke the vmccleanup method if instructed to do so (i.e., CB was invoked with --hard_reset or --soft_reset
@@ -242,7 +244,10 @@ class AzsCmds(CommonCloudFunctions):
                 _status = 0
 
             _status, _msg, _hostname = self.connect(
-                obj_attr_list["access"], obj_attr_list["credentials"], obj_attr_list["name"])
+                obj_attr_list["access"],
+                obj_attr_list["credentials"],
+                obj_attr_list["name"]
+            )
 
             obj_attr_list["cloud_hostname"] = _hostname + \
                 "_" + obj_attr_list["name"]
