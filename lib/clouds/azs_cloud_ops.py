@@ -125,11 +125,11 @@ class AzsCmds(CommonCloudFunctions):
         '''
         Not 100% sure what is going to be passed in
         '''
-
+        CommonCloudFunctions.__init__(self, pid, osci)
         # Idk
-        self.__pid = pid
-        self.__osci = osci
-        self.__expid = expid
+        self.pid = pid
+        self.osci = osci
+        self.expid = expid
 
         # clients
         self.resource_client = None

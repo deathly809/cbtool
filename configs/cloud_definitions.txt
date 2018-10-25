@@ -37,6 +37,7 @@ CLOUDOPTION_MYAS = cldattach os, vmcattach all
 # START: Specify the individual parameters for each cloud
 #-------------------------------------------------------------------------------
 [USER-DEFINED : CLOUDOPTION_MYAZS]
+AZS_ACCESS = https://<address>
 AZS_CREDENTIALS = arbitrarytag1:subscription_id1+certificate_path1,arbitrarytag2:subscription_id2+certificate_path2   # The subscription id is obtained from the Azure portal. The certificate is generated locally and uploaded through the portal,
 AZS_INITIAL_VMCS = redmond                                                                                            # Use four consecutives underscores (____) to indicate a space in the name
 AZS_NETNAME = public                                                                                                  # Currently not used
