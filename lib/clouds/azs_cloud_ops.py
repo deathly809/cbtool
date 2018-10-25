@@ -371,7 +371,7 @@ class AzsCmds(CommonCloudFunctions):
                 "VM", obj_attr_list, "provision_originated")
 
             self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
-                         obj_attr_list["vmc_name"])
+                         obj_attr_list["vmc_name"], ARM_ENDPOINT=obj_attr_list['access'])
 
             if self.is_vm_running(obj_attr_list):
                 _msg = "An instance named \"" + obj_attr_list["cloud_vm_name"]
@@ -586,7 +586,7 @@ class AzsCmds(CommonCloudFunctions):
         return "AzureStack cloud"
 
     @trace
-    def connect(self, access, credentials, vmc_name, ARM_ENDPOINT="", SUBSCRIPTION_ID="", TENANT_ID=""):
+    def connect(self, access, credentials, vmc_name):
         '''
         Description:
             Establishes a connection to the Cloud's API Endpoint
@@ -599,26 +599,27 @@ class AzsCmds(CommonCloudFunctions):
         '''
         KnownProfiles.default.use(KnownProfiles.v2017_03_09_profile)
 
-        mystack_cloud = get_cloud_from_metadata_endpoint(ARM_ENDPOINT)
+        mystack_cloud = get_cloud_from_metadata_endpoint(access)
 
-        subscription_id = SUBSCRIPTION_ID
+        creds = credentials.split(':')
+
         credentials = ServicePrincipalCredentials(
-            client_id=access,
-            secret=credentials,
-            tenant=TENANT_ID,
+            client_id=creds[0],
+            secret=creds[1],
+            tenant=creds[2],
             cloud_environment=mystack_cloud
         )
 
         self.resource_client = ResourceManagementClient(
-            credentials, subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
         self.compute_client = ComputeManagementClient(
-            credentials, subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
         self.storage_client = StorageManagementClient(
-            credentials, subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
         self.network_client = NetworkManagementClient(
-            credentials, subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
 
-        return 0, None, ARM_ENDPOINT
+        return 0, None, access
 
     @trace
     def check_networks(self, vmc_name, vm_defaults):
