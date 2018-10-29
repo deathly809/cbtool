@@ -808,6 +808,19 @@ class AzsCmds(CommonCloudFunctions):
         '''
         return 0, "NOT SUPPORTED"
 
+    @trace
+    def get_ssh_keys(self, vmc_name, key_name, key_contents, key_fingerprint, registered_key_pairs, internal, connection) :
+        '''
+        TBD
+        '''
+
+        for _key_pair in self.ec2conn.get_all_key_pairs() :
+            registered_key_pairs[_key_pair.name] = _key_pair.fingerprint + "-NA"
+
+            #self.ec2conn.delete_key_pair(key_name)
+
+        return True
+
 ########
 #
 # Optional operations
