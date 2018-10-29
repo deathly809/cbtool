@@ -71,6 +71,7 @@ import string
 import random
 import time
 import socket
+import urlparse
 
 ##########
 #
@@ -514,6 +515,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
 
         finally :
+            print("status of test_vmc_connection=" + _status)
             return self.common_messages("VMC", {"name" : vmc_name }, "connected", _status, _msg)
 
     @trace
@@ -619,7 +621,7 @@ class AzsCmds(CommonCloudFunctions):
         self.network_client = NetworkManagementClient(
             credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
 
-        return 0, None, access
+        return 0, None, urlparse.urlparse(access).netloc
 
     @trace
     def check_networks(self, vmc_name, vm_defaults):
