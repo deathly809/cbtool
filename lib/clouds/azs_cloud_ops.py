@@ -138,6 +138,9 @@ class AzsCmds(CommonCloudFunctions):
         self.storage_client = None
         self.network_client = None
 
+        # extra
+        self.hostname = ""
+
     ########
     #
     #   Mandatory
@@ -244,16 +247,18 @@ class AzsCmds(CommonCloudFunctions):
             else:
                 _status = 0
 
-            _status, _msg, _hostname = self.connect(
-                obj_attr_list["access"],
-                obj_attr_list["credentials"],
-                obj_attr_list["name"]
-            )
+            if self.hostname == "":
+                _status, _msg, _hostname = self.connect(
+                    obj_attr_list["access"],
+                    obj_attr_list["credentials"],
+                    obj_attr_list["name"]
+                )
+                self.hostname = _hostname
 
-            obj_attr_list["cloud_hostname"] = _hostname + \
+            obj_attr_list["cloud_hostname"] = self.hostname + \
                 "_" + obj_attr_list["name"]
             obj_attr_list["cloud_ip"] = socket.gethostbyname(
-                _hostname) + "_" + obj_attr_list["name"]
+                self.hostname) + "_" + obj_attr_list["name"]
             obj_attr_list["arrival"] = int(time.time())
 
             _time_mark_prc = int(time.time())
@@ -371,8 +376,9 @@ class AzsCmds(CommonCloudFunctions):
             self.take_action_if_requested(
                 "VM", obj_attr_list, "provision_originated")
 
-            self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
-                         obj_attr_list["vmc_name"])
+            if self.resource_client == None:
+                self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
+                            obj_attr_list["name"])
 
             if self.is_vm_running(obj_attr_list):
                 _msg = "An instance named \"" + obj_attr_list["cloud_vm_name"]
@@ -400,6 +406,7 @@ class AzsCmds(CommonCloudFunctions):
                 obj_attr_list["cloud_rv_type"] = "standard"
 
             self.common_messages("VM", obj_attr_list, "creating", 0, '')
+            _status = 0
         except CldOpsException, obj :
             _status = obj.status
             _msg = str(obj.msg)
