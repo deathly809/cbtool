@@ -166,11 +166,15 @@ class AzsCmds(CommonCloudFunctions):
                 cloud_name
 
         '''
+        print('vmccleanup')
         _status, _msg = get_default_error_response()
 
         # Connect to Azure Stack
         self.connect(
-            obj_attr_list["access"], obj_attr_list["credentials"], obj_attr_list["name"])
+            obj_attr_list["access"],
+            obj_attr_list["credentials"],
+            obj_attr_list["name"]
+        )
 
         try:
             # Get the list of resource groups
@@ -234,6 +238,7 @@ class AzsCmds(CommonCloudFunctions):
                 mgt_002_provisioning_request_sent
                 mgt_003_provisioning_request_completed
         '''
+        print('vmcregister')
         _status, _msg = get_default_error_response()
 
         # Get start time
@@ -294,7 +299,7 @@ class AzsCmds(CommonCloudFunctions):
 
         '''
         _status, _msg = get_default_error_response()
-
+        print('vmcunregister')
         try:
 
             _time_mark_drs = int(time.time())
@@ -362,6 +367,7 @@ class AzsCmds(CommonCloudFunctions):
                 instance_obj
 
         '''
+        print('vmcreate')
         _status, _msg = get_default_error_response()
         try:
             _instance = False
@@ -432,7 +438,8 @@ class AzsCmds(CommonCloudFunctions):
 
         '''
 
-        _status,_msg = get_default_error_response()
+        _status, _msg = get_default_error_response()
+        print('vmdestroy')
 
         try:
 
@@ -496,6 +503,7 @@ class AzsCmds(CommonCloudFunctions):
             During the testing, the following methods will be invoked: connect,
             check_networks, check_ssh_key, check_images
         '''
+        print('test_vmc_connection')
         try :
             _status, _msg = get_default_error_response()
             self.connect(access, credentials, vmc_name)
@@ -512,7 +520,6 @@ class AzsCmds(CommonCloudFunctions):
                 raise CldOpsException(_msg, _status)
 
             _status = 0
-
         except CldOpsException, obj :
             _msg = str(obj.msg)
             _status = 2
@@ -536,6 +543,7 @@ class AzsCmds(CommonCloudFunctions):
         Notes:
             Used by both vmcreate and vmdestroy methods.
         '''
+        print('is_vm_running')
         try:
             if "instance_obj" not in obj_attr_list :
                 _instance = self.get_instances(obj_attr_list, "vm")
@@ -568,6 +576,7 @@ class AzsCmds(CommonCloudFunctions):
         Notes:
             Used by the method vmcreate
         '''
+        print('is_vm_ready')
         if self.is_vm_running(obj_attr_list) :
             if self.get_ip_address(obj_attr_list) :
                 obj_attr_list["last_known_state"] = "running with ip assigned"
@@ -606,6 +615,7 @@ class AzsCmds(CommonCloudFunctions):
             Some native python clients are not thread-safe, and might required the storing of
             individual, per-instance connection in a python dictionary (look for osk_cloud_ops.py for an example)
         '''
+        print('connect')
         KnownProfiles.default.use(KnownProfiles.v2017_03_09_profile)
 
         mystack_cloud = get_cloud_from_metadata_endpoint(access)
@@ -679,7 +689,7 @@ class AzsCmds(CommonCloudFunctions):
         Notes:
             Used by the method is_vm_ready
         '''
-
+        print('get_ip_address')
         try :
             _host_name = None
             _ip_address = None
@@ -714,7 +724,7 @@ class AzsCmds(CommonCloudFunctions):
             Used by the method is_vm_ready
             Returns an Instance object declared at the top of the file.
         '''
-
+        print('get_instances')
         _status, _msg = get_default_error_response()
         _rgn = obj_attr_list["resource_group_name"]
         _vm_name = obj_attr_list["cloud_vm_name"]
@@ -768,6 +778,7 @@ class AzsCmds(CommonCloudFunctions):
             In order to put more stress on the Cloud's API, this is method is invoked, during
             vmcreate for each individual VM
         '''
+        print('get_images')
         try:
             _region = obj_attr_list['cloud_name']
             _publisher = 'Microsoft'
@@ -872,6 +883,7 @@ class AzsCmds(CommonCloudFunctions):
             Translates the CBTOOL API call/CLI command vmrunstate into start/stop/save/resume/suspend
             operations on the cloud.
         '''
+        print('vmrunstate')
         _status, _msg = get_default_error_response()
         try:
 
