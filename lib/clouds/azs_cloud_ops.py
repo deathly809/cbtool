@@ -822,6 +822,16 @@ class AzsCmds(CommonCloudFunctions):
         '''
         return 0, "NOT SUPPORTED"
 
+    @trace
+    def get_security_groups(self, vmc_name, security_group_name, registered_security_groups) :
+        '''
+        TBD
+        '''
+
+        registered_security_groups.append(security_group_name)
+
+        return True
+
 ########
 #
 # Optional operations
