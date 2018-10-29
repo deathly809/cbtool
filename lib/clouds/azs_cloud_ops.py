@@ -813,13 +813,7 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
-
-        for _key_pair in self.ec2conn.get_all_key_pairs() :
-            registered_key_pairs[_key_pair.name] = _key_pair.fingerprint + "-NA"
-
-            #self.ec2conn.delete_key_pair(key_name)
-
-        return True
+        return 0, "NOT SUPPORTED"
 
 ########
 #
