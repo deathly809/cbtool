@@ -371,7 +371,7 @@ class AzsCmds(CommonCloudFunctions):
                 "VM", obj_attr_list, "provision_originated")
 
             self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
-                         obj_attr_list["vmc_name"], ARM_ENDPOINT=obj_attr_list['access'])
+                         obj_attr_list["vmc_name"])
 
             if self.is_vm_running(obj_attr_list):
                 _msg = "An instance named \"" + obj_attr_list["cloud_vm_name"]
