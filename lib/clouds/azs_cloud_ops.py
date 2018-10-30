@@ -27,7 +27,6 @@
 # /*******************************************************************************
 
 
-
 '''
     Created on October 3, 2018
     Azure Stack Object Operations Library
@@ -43,8 +42,10 @@
 #   Custom classes
 #
 ########################################
+
+
 class Instance:
-    def constructor(self, vm_instance, private_ip, private_dns, public_ip = None, public_dns = None):
+    def constructor(self, vm_instance, private_ip, private_dns, public_ip=None, public_dns=None):
         self.instance = vm_instance
 
         self.public_ip = public_ip
@@ -86,10 +87,13 @@ from msrestazure.azure_cloud import get_cloud_from_metadata_endpoint
 from msrestazure.azure_exceptions import CloudError
 
 # Services
+
+# Clients
 from azure.mgmt.resource.resources.resource_management_client import ResourceManagementClient
 from azure.mgmt.compute.compute_management_client import ComputeManagementClient
 from azure.mgmt.network.network_management_client import NetworkManagementClient
 from azure.mgmt.storage.storage_management_client import StorageManagementClient
+
 
 ##########
 #
@@ -118,7 +122,6 @@ def randomword(length):
 ########################################
 
 
-
 class AzsCmds(CommonCloudFunctions):
 
     @trace
@@ -140,6 +143,15 @@ class AzsCmds(CommonCloudFunctions):
 
         # extra
         self.hostname = ""
+        self.storage_endpoint_suffix = ""
+
+        # Resource Names
+        self.location = ""
+        self.resource_group_name = "cbtool"
+        self.storage_account_name = "cbtool"
+
+        # VM Keys
+        self.keys = {}
 
     ########
     #
@@ -157,6 +169,8 @@ class AzsCmds(CommonCloudFunctions):
 
             This method is invoked when --hard_reset or --soft_reset is used to start the tool
 
+            For Azure(Stack) we just delete the resource group
+
         Attributes:
             Required:
                 access
@@ -169,27 +183,27 @@ class AzsCmds(CommonCloudFunctions):
         print('vmccleanup')
         _status, _msg = get_default_error_response()
 
-        # Connect to Azure Stack
-        self.connect(
-            obj_attr_list["access"],
-            obj_attr_list["credentials"],
-            obj_attr_list["name"]
-        )
-
         try:
-            # Get the list of resource groups
-            _resourceGroups = self.resource_client.resource_groups.list()
+
+            self.keys = {}
+
+            # Connect to Azure Stack
+            self.connect(
+                obj_attr_list["access"],
+                obj_attr_list["credentials"],
+                obj_attr_list["name"]
+            )
 
             self.common_messages("VMC", obj_attr_list,
                                  "cleaning up resources", 0, '')
 
-            for _resourceGroup in _resourceGroups:
-                cbdebug("Removing resource group: " +
-                        _resourceGroup.Name, True)
-                delete_async_operation = self.resource_client.resource_groups.delete(
-                    _resourceGroup.Name)
-                delete_async_operation.wait()
-                time.sleep(int(obj_attr_list["update_frequency"]))
+            # Remove resource group
+            cbdebug("Removing resource group: " +
+                    self.resource_group_name, True)
+            delete_async_operation = self.resource_client.resource_groups.delete(
+                self.resource_group_name)
+            delete_async_operation.wait()
+            time.sleep(int(obj_attr_list["update_frequency"]))
 
             _status = None
             _msg = None
@@ -216,6 +230,7 @@ class AzsCmds(CommonCloudFunctions):
 
             May invoke the vmccleanup method if instructed to do so (i.e., CB was invoked with --hard_reset or --soft_reset
 
+            For Azure(Stack) we create a resource group
 
         Attributes:
             Required:
@@ -247,24 +262,37 @@ class AzsCmds(CommonCloudFunctions):
             int(obj_attr_list["mgt_001_provisioning_request_originated"])
 
         try:
+
+            # Init SSH keys entry
+            self.location = obj_attr_list["vmc_name"]
+
             if "cleanup_on_attach" in obj_attr_list and obj_attr_list["cleanup_on_attach"] == "True":
                 _status, _msg = self.vmccleanup(obj_attr_list)
             else:
                 _status = 0
 
-            if self.hostname == "":
+            if self.resource_client == None:
                 _status, _msg, _hostname = self.connect(
                     obj_attr_list["access"],
                     obj_attr_list["credentials"],
                     obj_attr_list["name"]
                 )
-                self.hostname = _hostname
 
             obj_attr_list["cloud_hostname"] = self.hostname + \
                 "_" + obj_attr_list["name"]
             obj_attr_list["cloud_ip"] = socket.gethostbyname(
                 self.hostname) + "_" + obj_attr_list["name"]
             obj_attr_list["arrival"] = int(time.time())
+
+            parameters = {
+                'sku' : {
+                    'name' : 'standard_lrs'
+                },
+                'kind' : 'storage',
+                'location' : self.location
+            }
+            self.resource_client.resource_groups.create_or_update(self.resource_group_name, self.location)
+            self.storage_client.storage_accounts.create(self.resource_group_name,parameters)
 
             _time_mark_prc = int(time.time())
 
@@ -384,7 +412,7 @@ class AzsCmds(CommonCloudFunctions):
 
             if self.resource_client == None:
                 self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
-                            obj_attr_list["name"])
+                             obj_attr_list["name"])
 
             if self.is_vm_running(obj_attr_list):
                 _msg = "An instance named \"" + obj_attr_list["cloud_vm_name"]
@@ -412,15 +440,79 @@ class AzsCmds(CommonCloudFunctions):
                 obj_attr_list["cloud_rv_type"] = "standard"
 
             self.common_messages("VM", obj_attr_list, "creating", 0, '')
+
+            vm_name = obj_attr_list["cloud_vm_name"]
+            username = obj_attr_list["login"]
+            ssh_rsa = ""  # TODO : Get the SSH values
+
+            # Create nic
+            os_profile = {
+                'computer_name': vm_name,
+                'admin_username': username,
+                'linux_configuration': {
+                    "disable_password_authentication": True,
+                    "ssh": {
+                        "public_keys": [{
+                            "path": "/home/{}/.ssh/authorized_keys".format(username),
+                            "key_data": ssh_rsa
+                        }]
+                    }
+                }
+            }
+            hardware_profile = {
+                'vm_size': obj_attr_list["size"]
+            }
+            network_profile = {
+
+            }
+            storage_profile = {
+                'image_reference': {
+                    'publisher': 'Canonical',
+                    'offer': 'UbuntuServer',
+                    'sku': '16.04-LTS',
+                    'version': 'latest'
+                },
+                'os_disk': {
+                    'name': 'os.vhd',
+                    'caching': 'None',
+                    'create_option': 'fromImage',
+                    'vhd': {
+                        'uri': 'https://{}.blob.{}/{}/os.vhd'.format(
+                            self.storage_account_name, self.storage_endpoint_suffix, vm_name)
+                    }
+                },
+                'data_disks': [
+                    {
+                        'name': "datadisk1",
+                        'disk_size_gb': obj_attr_list["cloud_rv"],
+                        'lun': 0,
+                        'vhd': {
+                            'uri': 'https://{}.blob.{}/{}/data.vhd'.format(
+                                self.storage_account_name, self.storage_endpoint_suffix, vm_name)
+                        }
+                    }
+                ]
+            }
+
+            parameters = self.compute_client.virtual_machines.models.VirtualMachine(
+                location=self.location,
+                os_profile=os_profile,
+                hardware_profile=hardware_profile,
+                network_profile=network_profile,
+                storage_profile=storage_profile
+            )
+            self.compute_client.virtual_machines.create_or_update(
+                self.resource_group_name, obj_attr_list["cloud_vm_name"], parameters)
+
             _status = 0
-        except CldOpsException, obj :
+        except CldOpsException, obj:
             _status = obj.status
             _msg = str(obj.msg)
-        except Exception, msg :
+        except Exception, msg:
             _msg = str(msg)
             _status = 23
         finally:
-            if "instance_obj" in obj_attr_list :
+            if "instance_obj" in obj_attr_list:
                 del obj_attr_list["instance_obj"]
             del obj_attr_list["cloud_vv_instance"]
 
@@ -444,46 +536,46 @@ class AzsCmds(CommonCloudFunctions):
         try:
 
             _time_mark_drs = int(time.time())
-            if "mgt_901_deprovisioning_request_originated" not in obj_attr_list :
+            if "mgt_901_deprovisioning_request_originated" not in obj_attr_list:
                 obj_attr_list["mgt_901_deprovisioning_request_originated"] = _time_mark_drs
 
             obj_attr_list["mgt_902_deprovisioning_request_sent"] = \
-                _time_mark_drs - int(obj_attr_list["mgt_901_deprovisioning_request_originated"])
+                _time_mark_drs - \
+                int(obj_attr_list["mgt_901_deprovisioning_request_originated"])
 
-            if not self.compute_client:
-                self.connect(obj_attr_list["access"], obj_attr_list["credentials"], \
-                         obj_attr_list["vmc_name"])
+            if self.compute_client == None:
+                self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
+                             obj_attr_list["vmc_name"])
 
             _wait = int(obj_attr_list["update_frequency"])
             _max_tries = int(obj_attr_list["update_attempts"])
             _curr_tries = 0
 
-
             _rgn = obj_attr_list("resource_group_name")
             _instance = _instance = self.get_instances(obj_attr_list, "vm")
 
-
-            if _instance :
+            if _instance:
                 self.common_messages("VM", obj_attr_list, "destroying", 0, '')
 
                 time.sleep(_wait)
-                while self.is_vm_running(obj_attr_list) and _curr_tries < _max_tries :
+                while self.is_vm_running(obj_attr_list) and _curr_tries < _max_tries:
                     time.sleep(_wait)
                     _curr_tries += 1
 
             _os_disk_name = _instance.instance.storage_profile.os_disk.name
-            _data_disks  = _instance.instance.data_disks
+            _data_disks = _instance.instance.data_disks
 
-            _delete_async_operation = self.compute_client.virtual_machines.delete(_rgn, _instance.instance.name)
+            _delete_async_operation = self.compute_client.virtual_machines.delete(
+                _rgn, _instance.instance.name)
             _delete_async_operation.wait()
 
             _time_mark_drc = int(time.time())
             obj_attr_list["mgt_903_deprovisioning_request_completed"] = _time_mark_drc - _time_mark_drs
 
             # Delete VHDs associated with VM
-            self.compute_client.disks.delete(_rgn,_os_disk_name)
+            self.compute_client.disks.delete(_rgn, _os_disk_name)
             for _dd in _data_disks:
-                self.compute_client.disks.delete(_rgn,_dd.name)
+                self.compute_client.disks.delete(_rgn, _dd.name)
         except Exception, ex:
             _msg = str(ex)
             _status = 23
@@ -491,8 +583,8 @@ class AzsCmds(CommonCloudFunctions):
             return self.common_messages("VM", obj_attr_list, "destroyed", _status, _msg)
 
     @trace
-    def test_vmc_connection(self, cloud_name, vmc_name, access, credentials, key_name, \
-                            security_group_name, vm_templates, vm_defaults, vmc_defaults) :
+    def test_vmc_connection(self, cloud_name, vmc_name, access, credentials, key_name,
+                            security_group_name, vm_templates, vm_defaults, vmc_defaults):
         '''
         Description:
             During the initial Cloud attachment operation (at CB's startup) perform
@@ -504,32 +596,35 @@ class AzsCmds(CommonCloudFunctions):
             check_networks, check_ssh_key, check_images
         '''
         print('test_vmc_connection')
-        try :
+        try:
             _status, _msg = get_default_error_response()
             self.connect(access, credentials, vmc_name)
 
             self.generate_rc(cloud_name, vmc_defaults, '')
 
-            _key_pair_found = self.check_ssh_key(vmc_name, self.determine_key_name(vm_defaults), vm_defaults)
-            _security_group_found = self.check_security_group(vmc_name, security_group_name)
+            _key_pair_found = self.check_ssh_key(
+                vmc_name, self.determine_key_name(vm_defaults), vm_defaults)
+            _security_group_found = self.check_security_group(
+                vmc_name, security_group_name)
 
-            if not (_key_pair_found and _security_group_found) :
-                _msg = ": Check the previous errors, fix it (using " + self.get_description() + "'s web"
+            if not (_key_pair_found and _security_group_found):
+                _msg = ": Check the previous errors, fix it (using " + \
+                    self.get_description() + "'s web"
                 _msg += " GUI (AWS Console) or ec2-* CLI utilities"
                 _status = 1178
                 raise CldOpsException(_msg, _status)
 
             _status = 0
-        except CldOpsException, obj :
+        except CldOpsException, obj:
             _msg = str(obj.msg)
             _status = 2
 
-        except Exception, msg :
+        except Exception, msg:
             _msg = str(msg)
             _status = 23
 
-        finally :
-            return self.common_messages("VMC", {"name" : vmc_name }, "connected", _status, _msg)
+        finally:
+            return self.common_messages("VMC", {"name": vmc_name}, "connected", _status, _msg)
 
     @trace
     def is_vm_running(self, obj_attr_list):
@@ -544,21 +639,21 @@ class AzsCmds(CommonCloudFunctions):
         '''
         print('is_vm_running')
         try:
-            if "instance_obj" not in obj_attr_list :
+            if "instance_obj" not in obj_attr_list:
                 _instance = self.get_instances(obj_attr_list, "vm")
-            else :
+            else:
                 _instance = obj_attr_list["instance_obj"]
 
-            if _instance :
+            if _instance:
                 _instance_state = _instance.instance.provisioning_state
-            else :
+            else:
                 _instance_state = "non-existent"
 
-            if _instance_state == "running" :
+            if _instance_state == "running":
                 return True
-            else :
+            else:
                 return False
-        except Exception, ex :
+        except Exception, ex:
             _msg = str(ex)
             cberr(_msg)
             _status = 23
@@ -576,14 +671,14 @@ class AzsCmds(CommonCloudFunctions):
             Used by the method vmcreate
         '''
         print('is_vm_ready')
-        if self.is_vm_running(obj_attr_list) :
-            if self.get_ip_address(obj_attr_list) :
+        if self.is_vm_running(obj_attr_list):
+            if self.get_ip_address(obj_attr_list):
                 obj_attr_list["last_known_state"] = "running with ip assigned"
                 return True
-            else :
+            else:
                 obj_attr_list["last_known_state"] = "running with ip unassigned"
                 return False
-        else :
+        else:
             obj_attr_list["last_known_state"] = "not running"
             return False
 
@@ -628,6 +723,10 @@ class AzsCmds(CommonCloudFunctions):
             cloud_environment=mystack_cloud
         )
 
+        arm_url = mystack_cloud.endpoints.resource_manager
+
+        self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
+
         self.resource_client = ResourceManagementClient(
             credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
         self.compute_client = ComputeManagementClient(
@@ -639,7 +738,9 @@ class AzsCmds(CommonCloudFunctions):
 
         url = urlparse.urlparse(access)
 
-        return 0, None, url.netloc
+        self.hostname = url.netloc
+
+        return 0, None, self.hostname
 
     @trace
     def check_networks(self, vmc_name, vm_defaults):
@@ -691,14 +792,14 @@ class AzsCmds(CommonCloudFunctions):
             Used by the method is_vm_ready
         '''
         print('get_ip_address')
-        try :
+        try:
             _host_name = None
             _ip_address = None
 
-            if obj_attr_list["run_netname"] == "private" :
+            if obj_attr_list["run_netname"] == "private":
                 _hostname = obj_attr_list["instance_obj"].private_dns
                 _ip_address = obj_attr_list["instance_obj"].private_ip
-            else :
+            else:
                 _hostname = obj_attr_list["instance_obj"].public_dns
                 _ip_address = obj_attr_list["instance_obj"].public_ip
 
@@ -716,7 +817,7 @@ class AzsCmds(CommonCloudFunctions):
             return False
 
     @trace
-    def get_instances(self, obj_attr_list, obj_type = "vm"):
+    def get_instances(self, obj_attr_list, obj_type="vm"):
         '''
         Description:
             Returns a python object that represents a created instance.
@@ -741,8 +842,11 @@ class AzsCmds(CommonCloudFunctions):
             _vm_instance = None
 
             try:
-                _vm_instance = self.compute_client.virtual_machines.get(_rgn, _vm_name)
-            except:
+                _vm_instance = self.compute_client.virtual_machines.get(
+                    _rgn, _vm_name)
+            except Exception, ex:
+                print(str(ex))
+                print("no vms")
                 return None
 
             _nic_ids = _vm_instance.network_profile.network_interfaces
@@ -760,7 +864,7 @@ class AzsCmds(CommonCloudFunctions):
                     _private_dns = _vm_instance.os_profile.computer_name
                 if _nic.public_ip_address != None:
                     _private_ip = _nic.public_ip_address.ip_address
-                    _private_dns =_nic.dns_settings.domain_name_label
+                    _private_dns = _nic.dns_settings.domain_name_label
 
             return Instance(_vm_instance, _private_ip, _private_dns, _public_ip, _public_dns)
         except CloudError, er:
@@ -788,7 +892,7 @@ class AzsCmds(CommonCloudFunctions):
             _version = 'latest'
 
             _candidate_image = self.compute_client.virtual_machine_images.get(
-            _region, _publisher, _offer, _sku, _version)
+                _region, _publisher, _offer, _sku, _version)
 
             if _candidate_image:
                 obj_attr_list["imageid1"] = _candidate_image.name
@@ -830,21 +934,27 @@ class AzsCmds(CommonCloudFunctions):
         return 0, "NOT SUPPORTED"
 
     @trace
-    def get_ssh_keys(self, vmc_name, key_name, key_contents, key_fingerprint, registered_key_pairs, internal, connection) :
+    def get_ssh_keys(self, vmc_name, key_name, key_contents, key_fingerprint, registered_key_pairs, internal, connection):
         '''
         TBD
         '''
         return 0, "NOT SUPPORTED"
 
     @trace
-    def create_ssh_key(self, vmc_name, key_name, key_type, key_contents, key_fingerprint, vm_defaults, connection) :
+    def create_ssh_key(self, vmc_name, key_name, key_type, key_contents, key_fingerprint, vm_defaults, connection):
         '''
         TBD
         '''
-        return 0, "NOT SUPPORTED"
+        self.keys[key_name] = {
+            'name': key_contents,
+            'type': key_type,
+            'content': key_contents,
+            'fingerprint': key_fingerprint
+        }
+        return True
 
     @trace
-    def get_security_groups(self, vmc_name, security_group_name, registered_security_groups) :
+    def get_security_groups(self, vmc_name, security_group_name, registered_security_groups):
         '''
         TBD
         '''
@@ -890,38 +1000,45 @@ class AzsCmds(CommonCloudFunctions):
 
             _ts = obj_attr_list["target_state"]
             _cs = obj_attr_list["current_state"]
-            _rgn = obj_attr_list["resource_group_name"]
+            _rgn = self.resource_group_name
 
-            self.connect(obj_attr_list["access"], obj_attr_list["credentials"], \
+            self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
                          obj_attr_list["vmc_name"])
 
-            if "mgt_201_runstate_request_originated" in obj_attr_list :
+            if "mgt_201_runstate_request_originated" in obj_attr_list:
                 _time_mark_rrs = int(time.time())
                 obj_attr_list["mgt_202_runstate_request_sent"] = \
-                    _time_mark_rrs - obj_attr_list["mgt_201_runstate_request_originated"]
+                    _time_mark_rrs - \
+                    obj_attr_list["mgt_201_runstate_request_originated"]
 
-            self.common_messages("VM", obj_attr_list, "runstate altering", 0, '')
+            self.common_messages("VM", obj_attr_list,
+                                 "runstate altering", 0, '')
 
             _instance = self.get_instances(obj_attr_list, "vm")
 
-            if _instance :
-                if _ts == "fail" :
-                    self.compute_client.virtual_machines.power_off(_rgn, _instance.instance.name)
-                elif _ts == "save" :
-                    self.compute_client.virtual_machines.power_off(_rgn, _instance.instance.name)
-                elif (_ts == "attached" or _ts == "resume") and _cs == "fail" :
-                    self.compute_client.virtual_machines.start(_rgn, _instance.instance.name)
-                elif (_ts == "attached" or _ts == "restore") and _cs == "save" :
-                    self.compute_client.virtual_machines.start(_rgn, _instance.instance.name)
+            if _instance:
+                if _ts == "fail":
+                    self.compute_client.virtual_machines.power_off(
+                        _rgn, _instance.instance.name)
+                elif _ts == "save":
+                    self.compute_client.virtual_machines.power_off(
+                        _rgn, _instance.instance.name)
+                elif (_ts == "attached" or _ts == "resume") and _cs == "fail":
+                    self.compute_client.virtual_machines.start(
+                        _rgn, _instance.instance.name)
+                elif (_ts == "attached" or _ts == "restore") and _cs == "save":
+                    self.compute_client.virtual_machines.start(
+                        _rgn, _instance.instance.name)
 
             _time_mark_rrc = int(time.time())
             obj_attr_list["mgt_203_runstate_request_completed"] = _time_mark_rrc - _time_mark_rrs
 
-            _msg = "VM " + obj_attr_list["name"] + " runstate request completed."
+            _msg = "VM " + obj_attr_list["name"] + \
+                " runstate request completed."
             cbdebug(_msg)
 
             _status = 0
-        except Exception, msg :
+        except Exception, msg:
             _msg = str(msg)
             _status = 23
         finally:
