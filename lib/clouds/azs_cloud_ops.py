@@ -268,8 +268,7 @@ class AzsCmds(CommonCloudFunctions):
 
         try:
 
-            # Init SSH keys entry
-            self.location = obj_attr_list["vmc_name"]
+            self.location = obj_attr_list["name"]
 
             if "cleanup_on_attach" in obj_attr_list and obj_attr_list["cleanup_on_attach"] == "True":
                 _status, _msg = self.vmccleanup(obj_attr_list)
@@ -277,6 +276,7 @@ class AzsCmds(CommonCloudFunctions):
                 _status = None
 
             if self.resource_client == None:
+                print("resource client is None")
                 _status, _msg, _hostname = self.connect(
                     obj_attr_list["access"],
                     obj_attr_list["credentials"],
@@ -307,6 +307,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = None
             _msg = "registered"
         except Exception, msg:
+            print(str(msg))
             _msg = str(msg)
             _status = 23
         finally:
@@ -556,7 +557,7 @@ class AzsCmds(CommonCloudFunctions):
 
             if self.compute_client == None:
                 self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
-                             obj_attr_list["vmc_name"])
+                             obj_attr_list["name"])
 
             _wait = int(obj_attr_list["update_frequency"])
             _max_tries = int(obj_attr_list["update_attempts"])
@@ -1020,7 +1021,7 @@ class AzsCmds(CommonCloudFunctions):
             _rgn = self.resource_group_name
 
             self.connect(obj_attr_list["access"], obj_attr_list["credentials"],
-                         obj_attr_list["vmc_name"])
+                         obj_attr_list["name"])
 
             if "mgt_201_runstate_request_originated" in obj_attr_list:
                 _time_mark_rrs = int(time.time())
