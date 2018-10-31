@@ -180,7 +180,7 @@ class AzsCmds(CommonCloudFunctions):
                 cloud_name
 
         '''
-        print('vmccleanup')
+        print('enter:vmccleanup')
         _status, _msg = get_default_error_response()
 
         try:
@@ -211,6 +211,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
             _msg = str(ex)
         finally:
+            print('exit:vmccleanup')
             if(_msg == None):
                 _status, _msg = self.common_messages(
                     "VMC", obj_attr_list, "cleaned up", _status, _msg)
@@ -253,7 +254,7 @@ class AzsCmds(CommonCloudFunctions):
                 mgt_002_provisioning_request_sent
                 mgt_003_provisioning_request_completed
         '''
-        print('vmcregister')
+        print('enter:vmcregister')
         _status, _msg = get_default_error_response()
 
         # Get start time
@@ -269,7 +270,7 @@ class AzsCmds(CommonCloudFunctions):
             if "cleanup_on_attach" in obj_attr_list and obj_attr_list["cleanup_on_attach"] == "True":
                 _status, _msg = self.vmccleanup(obj_attr_list)
             else:
-                _status = 0
+                _status = None
 
             if self.resource_client == None:
                 _status, _msg, _hostname = self.connect(
@@ -299,14 +300,15 @@ class AzsCmds(CommonCloudFunctions):
 
             obj_attr_list["mgt_003_provisioning_request_completed"] = _time_mark_prc - _time_mark_prs
 
-            _status = 0
-            _msg = None
+            _status = None
+            _msg = "registered"
         except Exception, msg:
             _msg = str(msg)
             _status = 23
         finally:
+            print('exit:vmcregister')
             if _status == 0:
-                _status, _msg = self.common_messages("VMC", obj_attr_list, "registered", _status, _msg)
+                return self.common_messages("VMC", obj_attr_list, "registered", _status, _msg)
             return _status, _msg
 
     @trace
@@ -330,7 +332,7 @@ class AzsCmds(CommonCloudFunctions):
 
         '''
         _status, _msg = get_default_error_response()
-        print('vmcunregister')
+        print('enter:vmcunregister')
         try:
 
             _time_mark_drs = int(time.time())
@@ -346,13 +348,14 @@ class AzsCmds(CommonCloudFunctions):
 
             _time_mark_prc = int(time.time())
             obj_attr_list["mgt_903_deprovisioning_request_completed"] = _time_mark_prc - _time_mark_drs
-
-            _status = 0
         except Exception, msg:
             _msg = str(msg)
             _status = 23
         finally:
-            return self.common_messages("VMC", obj_attr_list, "unregistered", _status, _msg)
+            print('exit:vmcunregister')
+            if _status == 0:
+                return self.common_messages("VMC", obj_attr_list, "unregistered", _status, _msg)
+            return _status, _msg
 
     @trace
     def vmcreate(self, obj_attr_list):
@@ -507,7 +510,8 @@ class AzsCmds(CommonCloudFunctions):
             self.compute_client.virtual_machines.create_or_update(
                 self.resource_group_name, obj_attr_list["cloud_vm_name"], parameters)
 
-            _status = 0
+            _status = None
+            _msg = vm_name + " Created"
         except CldOpsException, obj:
             _status = obj.status
             _msg = str(obj.msg)
@@ -618,7 +622,8 @@ class AzsCmds(CommonCloudFunctions):
                 raise CldOpsException(_msg, _status)
 
             print(_key_pair_found)
-            _status = 0
+            _status = None
+            _msg = None
         except CldOpsException, obj:
             _msg = str(obj.msg)
             _status = 2
@@ -903,7 +908,7 @@ class AzsCmds(CommonCloudFunctions):
             if _candidate_image:
                 obj_attr_list["imageid1"] = _candidate_image.name
                 obj_attr_list["boot_volume_imageid1"] = _candidate_image.id
-                _status = 0
+                _status = None
                 _msg = "Image found"
             else:
                 _status = 404
@@ -1045,7 +1050,7 @@ class AzsCmds(CommonCloudFunctions):
                 " runstate request completed."
             cbdebug(_msg)
 
-            _status = 0
+            _status = None
         except Exception, msg:
             _msg = str(msg)
             _status = 23
