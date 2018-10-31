@@ -306,7 +306,7 @@ class AzsCmds(CommonCloudFunctions):
 
             obj_attr_list["mgt_003_provisioning_request_completed"] = _time_mark_prc - _time_mark_prs
 
-            _status = None
+            _status = 0
             _msg = "registered"
         except Exception, msg:
             print(str(msg))
@@ -314,7 +314,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
         finally:
             print('exit:vmcregister')
-            if _status == None:
+            if _status == 0:
                 return self.common_messages("VMC", obj_attr_list, "registered", _status, _msg)
             return _status, _msg
 
