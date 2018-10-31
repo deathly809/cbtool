@@ -297,8 +297,7 @@ class AzsCmds(CommonCloudFunctions):
             }
 
             cbdebug("creating resource group")
-            create_operation = self.resource_client.resource_groups.create_or_update(self.resource_group_name, { 'location' : self.location })
-            create_operation.wait()
+            self.resource_client.resource_groups.create_or_update(self.resource_group_name, { 'location' : self.location })
             cbdebug("creating storage account")
             create_operation = self.storage_client.storage_accounts.create(self.resource_group_name,parameters)
             create_operation.wait()
