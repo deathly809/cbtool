@@ -291,6 +291,7 @@ class AzsCmds(CommonCloudFunctions):
                 'kind' : 'storage',
                 'location' : self.location
             }
+
             self.resource_client.resource_groups.create_or_update(self.resource_group_name, self.location)
             self.storage_client.storage_accounts.create(self.resource_group_name,parameters)
 
@@ -614,6 +615,7 @@ class AzsCmds(CommonCloudFunctions):
                 _status = 1178
                 raise CldOpsException(_msg, _status)
 
+            print(_key_pair_found)
             _status = 0
         except CldOpsException, obj:
             _msg = str(obj.msg)
@@ -624,7 +626,9 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
 
         finally:
-            return self.common_messages("VMC", {"name": vmc_name}, "connected", _status, _msg)
+            if _status == 0:
+                _status, _msg = self.common_messages("VMC", {"name": vmc_name}, "connected", _status, _msg)
+            return _status, _msg
 
     @trace
     def is_vm_running(self, obj_attr_list):
@@ -938,6 +942,7 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
+        print('get_ssh_key')
         return 0, "NOT SUPPORTED"
 
     @trace
@@ -945,6 +950,7 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
+        print('create_ssh_key')
         self.keys[key_name] = {
             'name': key_contents,
             'type': key_type,
@@ -958,7 +964,7 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
-
+        print('get_security_groups')
         registered_security_groups.append(security_group_name)
 
         return True
