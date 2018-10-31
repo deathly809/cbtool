@@ -316,7 +316,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
         finally:
             print('exit:vmcregister')
-            if _status == 0:
+            if _status == None:
                 return self.common_messages("VMC", obj_attr_list, "registered", _status, _msg)
             return _status, _msg
 
