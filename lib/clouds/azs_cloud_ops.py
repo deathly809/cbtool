@@ -854,7 +854,7 @@ class AzsCmds(CommonCloudFunctions):
         '''
         print('enter:get_instances')
         _status, _msg = get_default_error_response()
-        _rgn = obj_attr_list["resource_group_name"]
+        _rgn = self.resource_group_name
         _vm_name = obj_attr_list["cloud_vm_name"]
 
         _result = None
