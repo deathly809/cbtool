@@ -200,9 +200,13 @@ class AzsCmds(CommonCloudFunctions):
             # Remove resource group
             cbdebug("Removing resource group: " +
                     self.resource_group_name, True)
-            delete_async_operation = self.resource_client.resource_groups.delete(
-                self.resource_group_name)
-            delete_async_operation.wait()
+            try:
+                delete_async_operation = self.resource_client.resource_groups.delete(
+                    self.resource_group_name)
+                delete_async_operation.wait()
+            except Exception, ex:
+                print("error trying to delete: " + str(ex))
+
             time.sleep(int(obj_attr_list["update_frequency"]))
 
             _status = None
