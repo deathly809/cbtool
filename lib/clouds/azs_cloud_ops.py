@@ -276,7 +276,6 @@ class AzsCmds(CommonCloudFunctions):
                 _status = None
 
             if self.resource_client == None:
-                print("resource client is None")
                 _status, _msg, _hostname = self.connect(
                     obj_attr_list["access"],
                     obj_attr_list["credentials"],
@@ -298,7 +297,7 @@ class AzsCmds(CommonCloudFunctions):
             }
 
             cbdebug("creating resource group")
-            create_operation = self.resource_client.resource_groups.create_or_update(self.resource_group_name, self.location)
+            create_operation = self.resource_client.resource_groups.create_or_update(self.resource_group_name, { 'location' : self.location })
             create_operation.wait()
             cbdebug("creating storage account")
             create_operation = self.storage_client.storage_accounts.create(self.resource_group_name,parameters)
