@@ -297,8 +297,12 @@ class AzsCmds(CommonCloudFunctions):
                 'location' : self.location
             }
 
-            self.resource_client.resource_groups.create_or_update(self.resource_group_name, self.location)
-            self.storage_client.storage_accounts.create(self.resource_group_name,parameters)
+            cbdebug("creating resource group")
+            create_operation = self.resource_client.resource_groups.create_or_update(self.resource_group_name, self.location)
+            create_operation.wait()
+            cbdebug("creating storage account")
+            create_operation = self.storage_client.storage_accounts.create(self.resource_group_name,parameters)
+            create_operation.wait()
 
             _time_mark_prc = int(time.time())
 
