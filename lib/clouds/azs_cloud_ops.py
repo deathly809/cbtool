@@ -408,7 +408,7 @@ class AzsCmds(CommonCloudFunctions):
                 instance_obj
 
         '''
-        print('vmcreate')
+        print('enter:vmcreate')
         _status, _msg = get_default_error_response()
         try:
             _instance = False
@@ -526,6 +526,7 @@ class AzsCmds(CommonCloudFunctions):
             _msg = str(msg)
             _status = 23
         finally:
+            print('enter:vmcreate')
             if "instance_obj" in obj_attr_list:
                 del obj_attr_list["instance_obj"]
             del obj_attr_list["cloud_vv_instance"]
@@ -545,7 +546,7 @@ class AzsCmds(CommonCloudFunctions):
         '''
 
         _status, _msg = get_default_error_response()
-        print('vmdestroy')
+        print('enter:vmdestroy')
 
         try:
 
@@ -594,6 +595,7 @@ class AzsCmds(CommonCloudFunctions):
             _msg = str(ex)
             _status = 23
         finally:
+            print('exit:vmdestroy')
             return self.common_messages("VM", obj_attr_list, "destroyed", _status, _msg)
 
     @trace
@@ -609,7 +611,7 @@ class AzsCmds(CommonCloudFunctions):
             During the testing, the following methods will be invoked: connect,
             check_networks, check_ssh_key, check_images
         '''
-        print('test_vmc_connection')
+        print('enter:test_vmc_connection')
         try:
             _status, _msg = get_default_error_response()
             self.connect(access, credentials, vmc_name)
@@ -640,6 +642,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
 
         finally:
+            print('exit:test_vmc_connection')
             if _status == 0:
                 _status, _msg = self.common_messages("VMC", {"name": vmc_name}, "connected", _status, _msg)
             return _status, _msg
@@ -655,7 +658,7 @@ class AzsCmds(CommonCloudFunctions):
         Notes:
             Used by both vmcreate and vmdestroy methods.
         '''
-        print('is_vm_running')
+        print('enter:is_vm_running')
         try:
             if "instance_obj" not in obj_attr_list:
                 _instance = self.get_instances(obj_attr_list, "vm")
@@ -676,6 +679,8 @@ class AzsCmds(CommonCloudFunctions):
             cberr(_msg)
             _status = 23
             raise CldOpsException(_msg, _status)
+        finally:
+            print('exit:is_vm_running')
 
     @trace
     def is_vm_ready(self, obj_attr_list):
@@ -688,17 +693,16 @@ class AzsCmds(CommonCloudFunctions):
         Notes:
             Used by the method vmcreate
         '''
-        print('is_vm_ready')
+        print('enter:is_vm_ready')
         if self.is_vm_running(obj_attr_list):
             if self.get_ip_address(obj_attr_list):
                 obj_attr_list["last_known_state"] = "running with ip assigned"
-                return True
             else:
                 obj_attr_list["last_known_state"] = "running with ip unassigned"
-                return False
         else:
             obj_attr_list["last_known_state"] = "not running"
-            return False
+        print('exit:is_vm_ready')
+        return obj_attr_list["last_known_state"] == 'running with ip assigned'
 
 
 ###
@@ -757,7 +761,7 @@ class AzsCmds(CommonCloudFunctions):
         url = urlparse.urlparse(access)
 
         self.hostname = url.netloc
-
+        print('exit:connect')
         return 0, None, self.hostname
 
     @trace
@@ -771,6 +775,7 @@ class AzsCmds(CommonCloudFunctions):
             Used by the method test_vmc_connection
 
         '''
+        print('enter/exit:check_networks')
         return 0, "NOT SUPPORTED"
 
     @trace
@@ -782,6 +787,7 @@ class AzsCmds(CommonCloudFunctions):
             present on the cloud.
 
         '''
+        print('enter/exit:check_images')
         return 0, "NOT SUPPORTED"
 
     @trace
@@ -791,7 +797,7 @@ class AzsCmds(CommonCloudFunctions):
             If the Cloud API's supports it, the method vmcregister will
             invoke this method to perform host discovery
         '''
-
+        print('enter/exit:discover_hosts')
         return 0, "NOT SUPPORTED"
 
 #####
@@ -809,7 +815,7 @@ class AzsCmds(CommonCloudFunctions):
         Notes:
             Used by the method is_vm_ready
         '''
-        print('get_ip_address')
+        print('enter:get_ip_address')
         try:
             _host_name = None
             _ip_address = None
@@ -833,6 +839,8 @@ class AzsCmds(CommonCloudFunctions):
             return True
         except:
             return False
+        finally:
+            print('exit:get_ip_address')
 
     @trace
     def get_instances(self, obj_attr_list, obj_type="vm"):
@@ -844,7 +852,7 @@ class AzsCmds(CommonCloudFunctions):
             Used by the method is_vm_ready
             Returns an Instance object declared at the top of the file.
         '''
-        print('get_instances')
+        print('enter:get_instances')
         _status, _msg = get_default_error_response()
         _rgn = obj_attr_list["resource_group_name"]
         _vm_name = obj_attr_list["cloud_vm_name"]
@@ -889,6 +897,13 @@ class AzsCmds(CommonCloudFunctions):
             _status = 10
             _msg = str(er.message)
             raise CldOpsException(_msg, _status)
+        except Exception, ex:
+            _status = 28
+            _msg = str(ex)
+            print(_msg)
+            raise CldOpsException(_msg, _status)
+        finally:
+            print("end:get_instances")
 
     @trace
     def get_images(self, obj_attr_list):
@@ -901,7 +916,7 @@ class AzsCmds(CommonCloudFunctions):
             In order to put more stress on the Cloud's API, this is method is invoked, during
             vmcreate for each individual VM
         '''
-        print('get_images')
+        print('enter:get_images')
         try:
             _region = obj_attr_list['cloud_name']
             _publisher = 'Microsoft'
@@ -931,6 +946,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
             _msg = str(ex)
         finally:
+            print('exit:get_images')
             if _status:
                 cberr(_msg)
                 raise CldOpsException(_msg, _status)
@@ -949,6 +965,7 @@ class AzsCmds(CommonCloudFunctions):
 
             Azure/AzureStack does not support this.
         '''
+        print('enter/exit:get_networks')
         return 0, "NOT SUPPORTED"
 
     @trace
@@ -956,7 +973,7 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
-        print('get_ssh_key')
+        print('enter/exit:get_ssh_key')
         return 0, "NOT SUPPORTED"
 
     @trace
@@ -964,21 +981,22 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
-        print('create_ssh_key')
+        print('enter:create_ssh_key')
         self.keys[key_name] = {
             'name': key_contents,
             'type': key_type,
             'content': key_contents,
             'fingerprint': key_fingerprint
         }
-        return 0, "NOT SUPPORTED"
+        print('exit:create_ssh_key')
+        return True
 
     @trace
     def get_security_groups(self, vmc_name, security_group_name, registered_security_groups):
         '''
         TBD
         '''
-        print('get_security_groups')
+        print('enter/exit:get_security_groups')
         registered_security_groups.append(security_group_name)
 
         return True
