@@ -305,7 +305,9 @@ class AzsCmds(CommonCloudFunctions):
             _msg = str(msg)
             _status = 23
         finally:
-            return self.common_messages("VMC", obj_attr_list, "registered", _status, _msg)
+            if _status == 0:
+                _status, _msg = self.common_messages("VMC", obj_attr_list, "registered", _status, _msg)
+            return _status, _msg
 
     @trace
     def vmcunregister(self, obj_attr_list):
@@ -957,7 +959,7 @@ class AzsCmds(CommonCloudFunctions):
             'content': key_contents,
             'fingerprint': key_fingerprint
         }
-        return True
+        return 0, "NOT SUPPORTED"
 
     @trace
     def get_security_groups(self, vmc_name, security_group_name, registered_security_groups):
