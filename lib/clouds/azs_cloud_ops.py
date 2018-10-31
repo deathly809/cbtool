@@ -309,7 +309,6 @@ class AzsCmds(CommonCloudFunctions):
             _status = 0
             _msg = "registered"
         except Exception, msg:
-            print(str(msg))
             _msg = str(msg)
             _status = 23
         finally:
@@ -526,12 +525,13 @@ class AzsCmds(CommonCloudFunctions):
             _msg = str(msg)
             _status = 23
         finally:
-            print('enter:vmcreate')
+            print('exit:vmcreate')
             if "instance_obj" in obj_attr_list:
                 del obj_attr_list["instance_obj"]
             del obj_attr_list["cloud_vv_instance"]
-
-            return self.common_messages("VM", obj_attr_list, "created", _status, _msg)
+            if _status == None:
+                return self.common_messages("VM", obj_attr_list, "created", _status, _msg)
+            return _status, _msg
 
     @trace
     def vmdestroy(self, obj_attr_list):
@@ -871,7 +871,6 @@ class AzsCmds(CommonCloudFunctions):
                 _vm_instance = self.compute_client.virtual_machines.get(
                     _rgn, _vm_name)
             except Exception, ex:
-                print(str(ex))
                 print("no vms")
                 return None
 
@@ -900,7 +899,6 @@ class AzsCmds(CommonCloudFunctions):
         except Exception, ex:
             _status = 28
             _msg = str(ex)
-            print(_msg)
             raise CldOpsException(_msg, _status)
         finally:
             print("end:get_instances")
