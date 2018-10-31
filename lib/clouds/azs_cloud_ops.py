@@ -457,6 +457,11 @@ class AzsCmds(CommonCloudFunctions):
             username = obj_attr_list["login"]
             ssh_rsa = ""  # TODO : Get the SSH values
 
+            os_disk_uri = 'https://{}.blob.{}/{}/os.vhd'.format(
+                            self.storage_account_name, self.storage_endpoint_suffix, vm_name)
+            data_disk_uri = 'https://{}.blob.{}/{}/data.vhd'.format(
+                                self.storage_account_name, self.storage_endpoint_suffix, vm_name)
+
             # Create nic
             os_profile = {
                 'computer_name': vm_name,
@@ -489,18 +494,17 @@ class AzsCmds(CommonCloudFunctions):
                     'caching': 'None',
                     'create_option': 'fromImage',
                     'vhd': {
-                        'uri': 'https://{}.blob.{}/{}/os.vhd'.format(
-                            self.storage_account_name, self.storage_endpoint_suffix, vm_name)
+                        'uri': os_disk_uri
                     }
                 },
                 'data_disks': [
                     {
                         'name': "datadisk1",
-                        'disk_size_gb': obj_attr_list["cloud_rv"],
+                        'disk_size_gb': 512,
+                        'create_option' : 'empty',
                         'lun': 0,
                         'vhd': {
-                            'uri': 'https://{}.blob.{}/{}/data.vhd'.format(
-                                self.storage_account_name, self.storage_endpoint_suffix, vm_name)
+                            'uri': data_disk_uri
                         }
                     }
                 ]
@@ -917,8 +921,8 @@ class AzsCmds(CommonCloudFunctions):
         print('enter:get_images')
         try:
             _region = obj_attr_list['cloud_name']
-            _publisher = 'Microsoft'
-            _offer = 'cbtool'
+            _publisher = 'Canonical'
+            _offer = 'UbuntuServer'
             _sku = obj_attr_list["imageid1"]
             _version = 'latest'
 
