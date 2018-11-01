@@ -360,7 +360,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 23
         finally:
             print('exit:vmcunregister')
-            return self.common_messages("VMC", obj_attr_list, "unregistered", _status, _fmsg)
+            return self.common_messages("VMC", obj_attr_list, "unregistered", _status, _msg)
 
     @trace
     def vmcreate(self, obj_attr_list):
