@@ -214,6 +214,8 @@ class AzsCmds(CommonCloudFunctions):
         except Exception, ex:
             _status = 23
             _msg = str(ex)
+            print(_msg)
+            print(_msg)
         finally:
             print('exit:vmccleanup')
             if(_msg == None):
@@ -310,6 +312,7 @@ class AzsCmds(CommonCloudFunctions):
             _msg = "registered"
         except Exception, msg:
             _msg = str(msg)
+            print(_msg)
             _status = 23
         finally:
             print('exit:vmcregister')
@@ -357,6 +360,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = 0
         except Exception, msg:
             _msg = str(msg)
+            print(_msg)
             _status = 23
         finally:
             print('exit:vmcunregister')
@@ -524,8 +528,10 @@ class AzsCmds(CommonCloudFunctions):
         except CldOpsException, obj:
             _status = obj.status
             _msg = str(obj.msg)
+            print(_msg)
         except Exception, msg:
             _msg = str(msg)
+            print(_msg)
             _status = 23
         finally:
             print('exit:vmcreate')
@@ -596,6 +602,7 @@ class AzsCmds(CommonCloudFunctions):
                 self.compute_client.disks.delete(_rgn, _dd.name)
         except Exception, ex:
             _msg = str(ex)
+            print(_msg)
             _status = 23
         finally:
             print('exit:vmdestroy')
@@ -638,10 +645,12 @@ class AzsCmds(CommonCloudFunctions):
             _msg = None
         except CldOpsException, obj:
             _msg = str(obj.msg)
+            print(_msg)
             _status = 2
 
         except Exception, msg:
             _msg = str(msg)
+            print(_msg)
             _status = 23
 
         finally:
@@ -679,6 +688,7 @@ class AzsCmds(CommonCloudFunctions):
                 return False
         except Exception, ex:
             _msg = str(ex)
+            print(_msg)
             cberr(_msg)
             _status = 23
             raise CldOpsException(_msg, _status)
@@ -898,10 +908,12 @@ class AzsCmds(CommonCloudFunctions):
         except CloudError, er:
             _status = 10
             _msg = str(er.message)
+            print(_msg)
             raise CldOpsException(_msg, _status)
         except Exception, ex:
             _status = 28
             _msg = str(ex)
+            print(_msg)
             raise CldOpsException(_msg, _status)
         finally:
             print("end:get_instances")
@@ -919,7 +931,9 @@ class AzsCmds(CommonCloudFunctions):
         '''
         print('enter:get_images')
         try:
-            _region = obj_attr_list['cloud_name']
+            _status = 0
+            return
+            _region = self.location
             _publisher = 'Canonical'
             _offer = 'UbuntuServer'
             _sku = obj_attr_list["imageid1"]
@@ -931,7 +945,7 @@ class AzsCmds(CommonCloudFunctions):
             if _candidate_image:
                 obj_attr_list["imageid1"] = _candidate_image.name
                 obj_attr_list["boot_volume_imageid1"] = _candidate_image.id
-                _status = None
+                _status = 0
                 _msg = "Image found"
             else:
                 _status = 404
@@ -943,9 +957,11 @@ class AzsCmds(CommonCloudFunctions):
         except CloudError, er:
             _status = 10
             _msg = str(er.message)
+            print(_msg)
         except Exception, ex:
             _status = 23
             _msg = str(ex)
+            print(_msg)
         finally:
             print('exit:get_images')
             if _status:
@@ -1079,6 +1095,7 @@ class AzsCmds(CommonCloudFunctions):
             _status = None
         except Exception, msg:
             _msg = str(msg)
+            print(_msg)
             _status = 23
         finally:
             return self.common_messages("VM", obj_attr_list, "runstate altered", _status, _msg)
