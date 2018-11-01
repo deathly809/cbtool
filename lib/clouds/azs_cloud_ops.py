@@ -354,14 +354,13 @@ class AzsCmds(CommonCloudFunctions):
 
             _time_mark_prc = int(time.time())
             obj_attr_list["mgt_903_deprovisioning_request_completed"] = _time_mark_prc - _time_mark_drs
+            _status = 0
         except Exception, msg:
             _msg = str(msg)
             _status = 23
         finally:
             print('exit:vmcunregister')
-            if _status == 0:
-                return self.common_messages("VMC", obj_attr_list, "unregistered", _status, _msg)
-            return _status, _msg
+            return self.common_messages("VMC", obj_attr_list, "unregistered", _status, _fmsg)
 
     @trace
     def vmcreate(self, obj_attr_list):
@@ -480,7 +479,7 @@ class AzsCmds(CommonCloudFunctions):
                 'vm_size': obj_attr_list["size"]
             }
             network_profile = {
-
+                'network_interfaces' : []
             }
             storage_profile = {
                 'image_reference': {
@@ -510,13 +509,13 @@ class AzsCmds(CommonCloudFunctions):
                 ]
             }
 
-            parameters = self.compute_client.virtual_machines.models.VirtualMachine(
-                location=self.location,
-                os_profile=os_profile,
-                hardware_profile=hardware_profile,
-                network_profile=network_profile,
-                storage_profile=storage_profile
-            )
+            parameters = {
+                'location'  : self.location,
+                'os_profile' : os_profile,
+                'hardware_profile' : hardware_profile,
+                'network_profile' : network_profile,
+                'storage_profile' : storage_profile
+            }
             self.compute_client.virtual_machines.create_or_update(
                 self.resource_group_name, obj_attr_list["cloud_vm_name"], parameters)
 
