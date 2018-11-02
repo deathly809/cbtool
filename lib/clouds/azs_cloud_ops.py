@@ -458,7 +458,7 @@ class AzsCmds(CommonCloudFunctions):
 
             vm_name = obj_attr_list["cloud_vm_name"]
             username = obj_attr_list["login"]
-            ssh_rsa = self.keys['key_name']  # TODO : Get the SSH values
+            ssh_rsa = obj_attr_list['key_name']  # TODO : Get the SSH values
 
             os_disk_uri = 'https://{}.blob.{}/{}/os.vhd'.format(
                             self.storage_account_name, self.storage_endpoint_suffix, vm_name)
