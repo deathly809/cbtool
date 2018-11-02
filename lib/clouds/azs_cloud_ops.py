@@ -932,19 +932,17 @@ class AzsCmds(CommonCloudFunctions):
         print('enter:get_images')
         try:
             _status = 0
-            return
             _region = self.location
             _publisher = 'Canonical'
             _offer = 'UbuntuServer'
             _sku = obj_attr_list["imageid1"]
-            _version = 'latest'
 
             _candidate_image = self.compute_client.virtual_machine_images.get(
-                _region, _publisher, _offer, _sku, _version)
+                _region, _publisher, _offer, _sku)
 
             if _candidate_image:
-                obj_attr_list["imageid1"] = _candidate_image.name
-                obj_attr_list["boot_volume_imageid1"] = _candidate_image.id
+                obj_attr_list["imageid1"] = _candidate_image[-1].name
+                obj_attr_list["boot_volume_imageid1"] = _candidate_image[-1].id
                 _status = 0
                 _msg = "Image found"
             else:
