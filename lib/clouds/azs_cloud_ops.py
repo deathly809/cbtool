@@ -465,6 +465,9 @@ class AzsCmds(CommonCloudFunctions):
             data_disk_uri = 'https://{}.blob.{}/{}/data.vhd'.format(
                                 self.storage_account_name, self.storage_endpoint_suffix, vm_name)
 
+            os_disk_uri = os_disk_uri.lower()
+            data_disk_uri = data_disk_uri.lower()
+
             # Create nic
             os_profile = {
                 'computer_name': vm_name,
