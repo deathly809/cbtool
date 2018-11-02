@@ -1010,7 +1010,7 @@ class AzsCmds(CommonCloudFunctions):
         }
         print('adding ' + key_name + ' to keys with the value ' + str(entry))
         self.keys[key_name] = entry
-        print("added=" + str(entry['content'] == self.keys[key_name]['contnet']))
+        print("added=" + str(entry['content'] == self.keys[key_name]['content']))
 
         print('exit:create_ssh_key')
         return True
