@@ -1000,6 +1000,7 @@ class AzsCmds(CommonCloudFunctions):
         TBD
         '''
         print('enter:create_ssh_key')
+        print('adding ', key_name, ' to keys')
         self.keys[key_name] = {
             'name': key_name,
             'type': key_type,
