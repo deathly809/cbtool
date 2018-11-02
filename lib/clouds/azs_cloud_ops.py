@@ -462,7 +462,7 @@ class AzsCmds(CommonCloudFunctions):
             for key in self.keys.keys():
                 print("key=" + key)
 
-            ssh_rsa = self.keys[obj_attr_list['key_name']].content  # TODO : Get the SSH values
+            ssh_rsa = self.keys[obj_attr_list['key_name']]['content']  # TODO : Get the SSH values
 
             os_disk_uri = 'https://{}.blob.{}/{}/os.vhd'.format(
                             self.storage_account_name, self.storage_endpoint_suffix, vm_name)
@@ -1004,13 +1004,16 @@ class AzsCmds(CommonCloudFunctions):
         TBD
         '''
         print('enter:create_ssh_key')
-        print('adding ', key_name, ' to keys')
-        self.keys[key_name] = {
+        entry = {
             'name': key_name,
             'type': key_type,
             'content': key_contents,
             'fingerprint': key_fingerprint
         }
+        print('adding ' + key_name + ' to keys with the value ' + entry)
+        self.keys[key_name] = entry
+        print("added=" + str(entry['content'] == self.keys[key_name]['contnet']))
+
         print('exit:create_ssh_key')
         return True
 
