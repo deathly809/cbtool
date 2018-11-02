@@ -185,8 +185,6 @@ class AzsCmds(CommonCloudFunctions):
 
         try:
 
-            self.keys = {}
-
             # Connect to Azure Stack
             self.connect(
                 obj_attr_list["access"],
