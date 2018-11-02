@@ -130,6 +130,9 @@ class AzsCmds(CommonCloudFunctions):
         Not 100% sure what is going to be passed in
         '''
         CommonCloudFunctions.__init__(self, pid, osci)
+
+        print("Creating new AzsCmds!")
+
         # Idk
         self.pid = pid
         self.osci = osci
