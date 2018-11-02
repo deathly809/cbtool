@@ -937,7 +937,7 @@ class AzsCmds(CommonCloudFunctions):
             _offer = 'UbuntuServer'
             _sku = obj_attr_list["imageid1"]
 
-            _candidate_image = self.compute_client.virtual_machine_images.get(
+            _candidate_image = self.compute_client.virtual_machine_images.list(
                 _region, _publisher, _offer, _sku)
 
             if _candidate_image:
