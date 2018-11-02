@@ -457,8 +457,7 @@ class AzsCmds(CommonCloudFunctions):
             vm_name = obj_attr_list["cloud_vm_name"]
             username = obj_attr_list["login"]
 
-            for key in self.keys.keys():
-                print("key=" + key)
+            print("keys=" + str(self.keys))
 
             ssh_rsa = self.keys[obj_attr_list['key_name']]['content']  # TODO : Get the SSH values
 
