@@ -1010,7 +1010,7 @@ class AzsCmds(CommonCloudFunctions):
             'content': key_contents,
             'fingerprint': key_fingerprint
         }
-        print('adding ' + key_name + ' to keys with the value ' + entry)
+        print('adding ' + key_name + ' to keys with the value ' + str(entry))
         self.keys[key_name] = entry
         print("added=" + str(entry['content'] == self.keys[key_name]['contnet']))
 
