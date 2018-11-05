@@ -93,6 +93,8 @@ from azure.mgmt.resource.resources.resource_management_client import ResourceMan
 from azure.mgmt.compute.compute_management_client import ComputeManagementClient
 from azure.mgmt.network.network_management_client import NetworkManagementClient
 from azure.mgmt.storage.storage_management_client import StorageManagementClient
+from azure.keyvault import KeyVaultClient
+from azure.mgmt.keyvault import KeyVaultManagementClient
 
 
 ##########
@@ -143,6 +145,9 @@ class AzsCmds(CommonCloudFunctions):
         self.compute_client = None
         self.storage_client = None
         self.network_client = None
+
+        self.keyvault_data_client = None
+        self.keyvault_mgmt_client = None
 
         # extra
         self.hostname = ""
@@ -777,6 +782,8 @@ class AzsCmds(CommonCloudFunctions):
             credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
         self.network_client = NetworkManagementClient(
             credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
+        self.keyvault_data_client = KeyVaultClient(credentials)
+        self.keyvault_mgmt_client = KeyVaultManagementClient(credentials, creds[3])
 
         url = urlparse.urlparse(access)
 
@@ -995,8 +1002,18 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
-        print('enter/exit:get_ssh_key')
-        return 0, "NOT SUPPORTED"
+        print('enter:get_ssh_key')
+        secret = None
+        try:
+            if self.keyvault_data_client != None:
+                vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name,'cbtool')
+                secret = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name)
+                registered_key_pairs[key_name] = secret
+        except:
+            secret = None
+        finally:
+            print('exit:get_ssh_key')
+            return secret != None
 
     @trace
     def create_ssh_key(self, vmc_name, key_name, key_type, key_contents, key_fingerprint, vm_defaults, connection):
@@ -1004,18 +1021,16 @@ class AzsCmds(CommonCloudFunctions):
         TBD
         '''
         print('enter:create_ssh_key')
-        entry = {
-            'name': key_name,
-            'type': key_type,
-            'content': key_contents,
-            'fingerprint': key_fingerprint
-        }
-        print('adding ' + key_name + ' to keys with the value ' + str(entry))
-        self.keys[key_name] = entry
-        print("added=" + str(entry['content'] == self.keys[key_name]['content']))
-
-        print('exit:create_ssh_key')
-        return True
+        secret = None
+        try:
+            if self.keyvault_data_client != None:
+                vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool')
+                secret = self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
+        except:
+            secret = None
+        finally:
+            print('exit:create_ssh_key')
+            return secret != None
 
     @trace
     def get_security_groups(self, vmc_name, security_group_name, registered_security_groups):
