@@ -203,24 +203,37 @@ class AzsCmds(CommonCloudFunctions):
             self.common_messages("VMC", obj_attr_list,
                                  "cleaning up resources", 0, '')
 
-            # Remove resource group
-            cbdebug("Removing resource group: " +
-                    self.resource_group_name, True)
-            try:
-                delete_async_operation = self.resource_client.resource_groups.delete(
-                    self.resource_group_name)
-                delete_async_operation.wait()
-            except Exception, ex:
-                print("error trying to delete: " + str(ex))
+            # Kick off all deletions
+            vm_deletions = {}
+            vms = self.compute_client.virtual_machines.list(self.resource_group_name)
+            for vm in vms:
+                cbdebug("removing VM: " + vm.name, True)
+                async_vm_delete  = self.compute_client.virtual_machines.delete(self.resource_group_name, vm.name)
+                vm_deletions[vm.name] = async_vm_delete
 
-            time.sleep(int(obj_attr_list["update_frequency"]))
+            for vm_name in vm_deletions:
+                try:
+                    vm_deletions[vm_name].wait()
+                except Exception, ex:
+                    print("error trying to delete vm: (" + vm_name + ") " + str(ex))
+
+            sa_deletions = {}
+            for sa in self.storage_client.storage_accounts.list():
+                cbdebug("removing storage account: " + sa.name, True)
+                async_vm_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
+                sa_deletions[sa.name] = async_vm_delete
+
+            for name in sa_deletions:
+                try:
+                    sa_deletions[name].wait()
+                except Exception, ex:
+                    print("error trying to delete storage account: (" + name + ") " + str(ex))
 
             _status = None
             _msg = None
         except Exception, ex:
             _status = 23
             _msg = str(ex)
-            print(_msg)
             print(_msg)
         finally:
             print('exit:vmccleanup')
