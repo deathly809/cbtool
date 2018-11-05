@@ -207,7 +207,8 @@ class AzsCmds(CommonCloudFunctions):
             vm_deletions = {}
             vms = self.compute_client.virtual_machines.list(self.resource_group_name)
             for vm in vms:
-                cbdebug("removing virtual machine {vm_name} under resource group {rgn} ".format(vm.name,self.resource_group_name), True)
+                d_msg = "removing virtual machine {vm_name} under resource group {rgn} ".format(vm_name = vm.name, rgn = self.resource_group_name)
+                cbdebug(d_msg, True)
                 # async_vm_delete  = self.compute_client.virtual_machines.delete(self.resource_group_name, vm.name)
                 # vm_deletions[vm.name] = async_vm_delete
 
@@ -219,7 +220,8 @@ class AzsCmds(CommonCloudFunctions):
 
             sa_deletions = {}
             for sa in self.storage_client.storage_accounts.list():
-                cbdebug("removing storage account {sa_name} under resource group {rgn} ".format(sa.name,self.resource_group_name), True)
+                d_msg = "removing virtual machine {sa_name} under resource group {rgn} ".format(sa_name = sa.name, rgn = self.resource_group_name)
+                cbdebug(d_msg, True)
                 # async_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
                 # sa_deletions[sa.name] = async_delete
 
