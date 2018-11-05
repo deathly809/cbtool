@@ -1034,16 +1034,19 @@ class AzsCmds(CommonCloudFunctions):
         TBD
         '''
         print('enter:create_ssh_key')
-        secret = None
+        result = False
         try:
             if self.keyvault_data_client != None:
                 vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool')
-                secret = self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
-        except:
-            secret = None
+                self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
+                result = True
+                print("SSH key saved to keyvault")
+        except Exception, ex:
+            print("Failed to save SSH")
+            print(str(ex))
         finally:
             print('exit:create_ssh_key')
-            return secret != None
+            return result
 
     @trace
     def get_security_groups(self, vmc_name, security_group_name, registered_security_groups):
