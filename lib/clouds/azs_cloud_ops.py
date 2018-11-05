@@ -219,9 +219,9 @@ class AzsCmds(CommonCloudFunctions):
 
             sa_deletions = {}
             for sa in self.storage_client.storage_accounts.list():
-                cbdebug("removing storage account: " + sa.name, True)
-                async_vm_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
-                sa_deletions[sa.name] = async_vm_delete
+                cbdebug("removing storage account {sa_name} under resource group {rgn} ".format(sa.name,self.resource_group_name), True)
+                # async_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
+                # sa_deletions[sa.name] = async_delete
 
             for name in sa_deletions:
                 try:
