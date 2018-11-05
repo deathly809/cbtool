@@ -219,8 +219,8 @@ class AzsCmds(CommonCloudFunctions):
                     print("error trying to delete vm: (" + vm_name + ") " + str(ex))
 
             sa_deletions = {}
-            for sa in self.storage_client.storage_accounts.list():
-                d_msg = "removing virtual machine {sa_name} under resource group {rgn} ".format(sa_name = sa.name, rgn = self.resource_group_name)
+            for sa in self.storage_client.storage_accounts.list(self.resource_group_name):
+                d_msg = "removing storage account {sa_name} under resource group {rgn} ".format(sa_name = sa.name, rgn = self.resource_group_name)
                 cbdebug(d_msg, True)
                 # async_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
                 # sa_deletions[sa.name] = async_delete
