@@ -207,9 +207,9 @@ class AzsCmds(CommonCloudFunctions):
             vm_deletions = {}
             vms = self.compute_client.virtual_machines.list(self.resource_group_name)
             for vm in vms:
-                cbdebug("removing VM: " + vm.name, True)
-                async_vm_delete  = self.compute_client.virtual_machines.delete(self.resource_group_name, vm.name)
-                vm_deletions[vm.name] = async_vm_delete
+                cbdebug("removing virtual machine {vm_name} under resource group {rgn} ".format(vm.name,self.resource_group_name), True)
+                # async_vm_delete  = self.compute_client.virtual_machines.delete(self.resource_group_name, vm.name)
+                # vm_deletions[vm.name] = async_vm_delete
 
             for vm_name in vm_deletions:
                 try:
