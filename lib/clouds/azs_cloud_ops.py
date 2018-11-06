@@ -810,6 +810,8 @@ class AzsCmds(CommonCloudFunctions):
             resource = mystack_cloud.endpoints.active_directory_resource_id
         )
 
+        self.location = vmc_name
+
         arm_url = mystack_cloud.endpoints.resource_manager
 
         self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
@@ -1103,7 +1105,7 @@ class AzsCmds(CommonCloudFunctions):
                     }
                 }
                 print("Creating keyvault")
-                vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
+                vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters).result()
                 print("saving SSH key to keyvault")
                 self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
                 result = True
