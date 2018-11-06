@@ -805,13 +805,13 @@ class AzsCmds(CommonCloudFunctions):
             secret=creds[1],
             tenant=self.tenant_id,
             cloud_environment=mystack_cloud,
-            resource = mystack_cloud.endpoints.active_directory_resource_id
+            resource = mystack_cloud.endpoints.active_directory_graph_resource_id
         )
 
         arm_url = mystack_cloud.endpoints.resource_manager
 
         self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
-        self.vault_endpoint = 'vault.' + self.storage_endpoint_suffix
+        self.vault_endpoint = 'adminvault.' + self.storage_endpoint_suffix
 
         self.resource_client = ResourceManagementClient(
             credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
