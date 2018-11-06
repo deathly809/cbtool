@@ -831,7 +831,7 @@ class AzsCmds(CommonCloudFunctions):
         print('Creating keyvault data-plane client')
         self.keyvault_data_client = KeyVaultClient(credentials)
         print('Creating key vault client')
-        self.keyvault_mgmt_client = KeyVaultManagementClient(credentials, self.subscription_id)
+        self.keyvault_mgmt_client = KeyVaultManagementClient(KeyVaultCredential(credentials, self.subscription_id, base_url = mystack_cloud.endpoints.resource_manager)
 
         credentials = ServicePrincipalCredentials(
             client_id=self.client_id,
