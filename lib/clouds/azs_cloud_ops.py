@@ -236,7 +236,7 @@ class AzsCmds(CommonCloudFunctions):
                 except Exception, ex:
                     print("error trying to delete vm: (" + vm_name + ") " + str(ex))
 
-            cbdebug("getting the list of storage accountsv", True)
+            cbdebug("getting the list of storage accounts", True)
             sa_deletions = {}
             for sa in self.storage_client.storage_accounts.list(self.resource_group_name):
                 d_msg = "removing storage account {sa_name} under resource group {rgn} ".format(sa_name = sa.name, rgn = self.resource_group_name)
@@ -499,10 +499,6 @@ class AzsCmds(CommonCloudFunctions):
             vm_name = obj_attr_list["cloud_vm_name"]
             username = obj_attr_list["login"]
 
-            print("keys=" + str(self.keys))
-
-            ssh_rsa = self.keys[obj_attr_list['key_name']]['content']  # TODO : Get the SSH values
-
             os_disk_uri = 'https://{}.blob.{}/{}/os.vhd'.format(
                             self.storage_account_name, self.storage_endpoint_suffix, vm_name)
             data_disk_uri = 'https://{}.blob.{}/{}/data.vhd'.format(
@@ -511,7 +507,11 @@ class AzsCmds(CommonCloudFunctions):
             os_disk_uri = os_disk_uri.lower()
             data_disk_uri = data_disk_uri.lower()
 
-            # Create nic
+
+            key_name = obj_attr_list['key_name']
+            vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name, vm_name)
+            ssh_rsa = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name)
+
             os_profile = {
                 'computer_name': vm_name,
                 'admin_username': username,
@@ -528,9 +528,11 @@ class AzsCmds(CommonCloudFunctions):
             hardware_profile = {
                 'vm_size': obj_attr_list["size"]
             }
+
             network_profile = {
                 'network_interfaces' : []
             }
+
             storage_profile = {
                 'image_reference': {
                     'publisher': 'Canonical',
