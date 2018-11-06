@@ -813,16 +813,22 @@ class AzsCmds(CommonCloudFunctions):
         self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
         self.vault_endpoint = 'adminvault.' + self.storage_endpoint_suffix
 
+        print('Creating resource client')
         self.resource_client = ResourceManagementClient(
             credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+        print('Creating compute client')
         self.compute_client = ComputeManagementClient(
             credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+        print('Creating storage client')
         self.storage_client = StorageManagementClient(
             credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+        print('Creating network client')
         self.network_client = NetworkManagementClient(
             credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
 
+        print('Creating keyvault data-plane client')
         self.keyvault_data_client = KeyVaultClient(credentials)
+        print('Creating key vault client')
         self.keyvault_mgmt_client = KeyVaultManagementClient(credentials, self.subscription_id)
 
         credentials = ServicePrincipalCredentials(
@@ -832,6 +838,8 @@ class AzsCmds(CommonCloudFunctions):
             cloud_environment=mystack_cloud,
             resource = mystack_cloud.endpoints.active_directory_graph_resource_id
         )
+
+        print('Creating RBAC client')
         self.rbac_client = GraphRbacManagementClient(credentials, self.tenant_id)
         self.object_id = next(self.rbac_client.service_principals.list(filter="servicePrincipalNames/any(c: c eq '{}')".format(self.client_id))).object_id
 
