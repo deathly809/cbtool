@@ -88,13 +88,22 @@ from msrestazure.azure_exceptions import CloudError
 
 # Services
 
+#
 # Clients
+#
+
+# Resource
 from azure.mgmt.resource.resources.resource_management_client import ResourceManagementClient
+
 from azure.mgmt.compute.compute_management_client import ComputeManagementClient
 from azure.mgmt.network.network_management_client import NetworkManagementClient
 from azure.mgmt.storage.storage_management_client import StorageManagementClient
+
+# KeyVault
 from azure.keyvault import KeyVaultClient
 from azure.mgmt.keyvault import KeyVaultManagementClient
+
+from azure.graphrbac import GraphRbacManagementClient
 
 
 ##########
@@ -149,6 +158,8 @@ class AzsCmds(CommonCloudFunctions):
         self.keyvault_data_client = None
         self.keyvault_mgmt_client = None
 
+        self.rbac_client = None
+
         # extra
         self.hostname = ""
         self.storage_endpoint_suffix = ""
@@ -157,6 +168,11 @@ class AzsCmds(CommonCloudFunctions):
         self.location = ""
         self.resource_group_name = "cbtool"
         self.storage_account_name = "cbtool"
+
+        self.subscription_id = None
+        self.client_id = None
+        self.object_id = None
+        self.tenant_id = None
 
         # VM Keys
         self.keys = {}
@@ -772,16 +788,21 @@ class AzsCmds(CommonCloudFunctions):
             individual, per-instance connection in a python dictionary (look for osk_cloud_ops.py for an example)
         '''
         print('connect')
-        KnownProfiles.default.use(KnownProfiles.v2017_03_09_profile)
+        KnownProfiles.default.use(KnownProfiles.v2018_03_01_hybrid)
 
         mystack_cloud = get_cloud_from_metadata_endpoint(access)
 
         creds = credentials.split(':')
 
+        self.client_id = creds[0]
+        self.tenant_id = creds[2]
+        self.subscription_id = creds[3]
+
+
         credentials = ServicePrincipalCredentials(
-            client_id=creds[0],
+            client_id=self.client_id,
             secret=creds[1],
-            tenant=creds[2],
+            tenant=self.tenant_id,
             cloud_environment=mystack_cloud
         )
 
@@ -790,15 +811,19 @@ class AzsCmds(CommonCloudFunctions):
         self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
 
         self.resource_client = ResourceManagementClient(
-            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
         self.compute_client = ComputeManagementClient(
-            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
         self.storage_client = StorageManagementClient(
-            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
         self.network_client = NetworkManagementClient(
-            credentials, creds[3], base_url=mystack_cloud.endpoints.resource_manager)
+            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+
         self.keyvault_data_client = KeyVaultClient(credentials)
-        self.keyvault_mgmt_client = KeyVaultManagementClient(credentials, creds[3])
+        self.keyvault_mgmt_client = KeyVaultManagementClient(credentials, self.subscription_id)
+
+        self.rbac_client = GraphRbacManagementClient(credentials, self.tenant_id)
+        self.object_id = next(self.rbac_client.service_principals.list(filter="servicePrincipalNames/any(c: c eq '{}')".format(self.client_id))).object_id
 
         url = urlparse.urlparse(access)
 
@@ -1039,7 +1064,27 @@ class AzsCmds(CommonCloudFunctions):
         result = False
         try:
             if self.keyvault_data_client != None:
-                vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool')
+
+                self.rbac_client
+
+                parameters =  {
+                    'location': self.location,
+                    'properties': {
+                        'sku': {
+                            'name': 'standard'
+                        },
+                        'tenant_id': self.tenant_id,
+                        'access_policies': [{
+                            'tenant_id': self.tenant_id,
+                            'object_id': self.object_id,
+                            'permissions': {
+                                'keys': ['all'],
+                                'secrets': ['all']
+                            }
+                        }]
+                    }
+                }
+                vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
                 self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
                 result = True
                 print("SSH key saved to keyvault")
