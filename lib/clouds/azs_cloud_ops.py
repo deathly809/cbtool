@@ -803,12 +803,14 @@ class AzsCmds(CommonCloudFunctions):
             client_id=self.client_id,
             secret=creds[1],
             tenant=self.tenant_id,
-            cloud_environment=mystack_cloud
+            cloud_environment=mystack_cloud,
+            resource = 'https://graph.windows.net/' # TODO Pull this from somewhere
         )
 
         arm_url = mystack_cloud.endpoints.resource_manager
 
         self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
+        self.vault_endpoint = 'vault.' + self.storage_endpoint_suffix
 
         self.resource_client = ResourceManagementClient(
             credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
@@ -1064,8 +1066,6 @@ class AzsCmds(CommonCloudFunctions):
         result = False
         try:
             if self.keyvault_data_client != None:
-
-                self.rbac_client
 
                 parameters =  {
                     'location': self.location,
