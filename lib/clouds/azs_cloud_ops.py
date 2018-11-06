@@ -807,7 +807,7 @@ class AzsCmds(CommonCloudFunctions):
             secret=creds[1],
             tenant=self.tenant_id,
             cloud_environment=mystack_cloud,
-            resource = mystack_cloud.endpoints.active_directory_graph_resource_id
+            resource = mystack_cloud.endpoints.active_directory_resource_id
         )
 
         arm_url = mystack_cloud.endpoints.resource_manager
