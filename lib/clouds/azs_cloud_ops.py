@@ -236,7 +236,7 @@ class AzsCmds(CommonCloudFunctions):
                 except Exception, ex:
                     print("error trying to delete vm: (" + vm_name + ") " + str(ex))
 
-            cbdebug("getting the list of storage accounts", True)
+            cbdebug("getting the list of storage accountsv", True)
             sa_deletions = {}
             for sa in self.storage_client.storage_accounts.list(self.resource_group_name):
                 d_msg = "removing storage account {sa_name} under resource group {rgn} ".format(sa_name = sa.name, rgn = self.resource_group_name)
@@ -1102,7 +1102,9 @@ class AzsCmds(CommonCloudFunctions):
                         }]
                     }
                 }
+                print("Creating keyvault")
                 vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
+                print("saving SSH key to keyvault")
                 self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
                 result = True
                 print("SSH key saved to keyvault")
