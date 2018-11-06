@@ -73,6 +73,9 @@ import random
 import time
 import socket
 import urlparse
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 ##########
 #
