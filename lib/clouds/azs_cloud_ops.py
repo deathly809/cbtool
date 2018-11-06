@@ -221,6 +221,7 @@ class AzsCmds(CommonCloudFunctions):
                                  "cleaning up resources", 0, '')
 
             # Kick off all deletions
+            cbdebug("getting the list of VMs", True)
             vm_deletions = {}
             vms = self.compute_client.virtual_machines.list(self.resource_group_name)
             for vm in vms:
@@ -235,6 +236,7 @@ class AzsCmds(CommonCloudFunctions):
                 except Exception, ex:
                     print("error trying to delete vm: (" + vm_name + ") " + str(ex))
 
+            cbdebug("getting the list of storage accounts", True)
             sa_deletions = {}
             for sa in self.storage_client.storage_accounts.list(self.resource_group_name):
                 d_msg = "removing storage account {sa_name} under resource group {rgn} ".format(sa_name = sa.name, rgn = self.resource_group_name)
