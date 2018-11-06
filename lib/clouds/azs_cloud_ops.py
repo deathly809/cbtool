@@ -75,8 +75,6 @@ import socket
 import urlparse
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 ##########
 #
 #   AzureStack Python
@@ -827,6 +825,13 @@ class AzsCmds(CommonCloudFunctions):
         self.keyvault_data_client = KeyVaultClient(credentials)
         self.keyvault_mgmt_client = KeyVaultManagementClient(credentials, self.subscription_id)
 
+        credentials = ServicePrincipalCredentials(
+            client_id=self.client_id,
+            secret=creds[1],
+            tenant=self.tenant_id,
+            cloud_environment=mystack_cloud,
+            resource = mystack_cloud.endpoints.active_directory_graph_resource_id
+        )
         self.rbac_client = GraphRbacManagementClient(credentials, self.tenant_id)
         self.object_id = next(self.rbac_client.service_principals.list(filter="servicePrincipalNames/any(c: c eq '{}')".format(self.client_id))).object_id
 
