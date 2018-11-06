@@ -1065,6 +1065,7 @@ class AzsCmds(CommonCloudFunctions):
         TBD
         '''
         print('enter:get_ssh_key')
+        key_name = key_name.replace('_','-')
         secret = None
         try:
             if self.keyvault_data_client != None:
@@ -1082,6 +1083,8 @@ class AzsCmds(CommonCloudFunctions):
         '''
         TBD
         '''
+
+        key_name = key_name.replace('_','-')
         print('enter:create_ssh_key')
         result = False
         try:
@@ -1106,7 +1109,6 @@ class AzsCmds(CommonCloudFunctions):
                 }
                 print("Creating keyvault")
                 vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
-                print(dir(vault))
                 print("saving SSH key to keyvault: " + key_name)
                 self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
                 result = True
