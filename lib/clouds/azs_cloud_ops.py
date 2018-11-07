@@ -549,7 +549,7 @@ class AzsCmds(CommonCloudFunctions):
                         'subnet' : subnet.id
                     }
                 }
-            )
+            ).result()
 
             os_profile = {
                 'computer_name': vm_name,
