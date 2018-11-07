@@ -509,7 +509,7 @@ class AzsCmds(CommonCloudFunctions):
 
 
             key_name = obj_attr_list['key_name']
-            vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name, vm_name)
+            vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name, 'cbtool')
             ssh_rsa = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name)
 
             os_profile = {
