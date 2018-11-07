@@ -508,7 +508,7 @@ class AzsCmds(CommonCloudFunctions):
             data_disk_uri = data_disk_uri.lower()
 
 
-            key_name = obj_attr_list['key_name']
+            key_name = obj_attr_list['key_name'].replace('_','-')
             vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name, 'cbtool')
             ssh_rsa = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
 
