@@ -222,7 +222,7 @@ class AzsCmds(CommonCloudFunctions):
                                  "cleaning up resources", 0, '')
 
             # Kick off all deletions
-            cbdebug("getting the list of VMs", True)
+            cbdebug("getting the list of VMs under the resource group {}".format(self.resource_client), True)
             vm_deletions = {}
             vms = self.compute_client.virtual_machines.list(self.resource_group_name)
             for vm in vms:
@@ -231,22 +231,24 @@ class AzsCmds(CommonCloudFunctions):
                 # async_vm_delete  = self.compute_client.virtual_machines.delete(self.resource_group_name, vm.name)
                 # vm_deletions[vm.name] = async_vm_delete
 
-            for vm_name in vm_deletions:
+            for name in vm_deletions:
                 try:
-                    vm_deletions[vm_name].wait()
+                    cbdebug("waiting for {} to be deleted".format(name), True)
+                    vm_deletions[name].wait()
                 except Exception, ex:
-                    print("error trying to delete vm: (" + vm_name + ") " + str(ex))
+                    print("error trying to delete vm: (" + name + ") " + str(ex))
 
-            cbdebug("getting the list of storage accounts", True)
+            cbdebug("getting the list of storage accounts under the resource group {}".format(self.resource_client), True)
             sa_deletions = {}
             for sa in self.storage_client.storage_accounts.list(self.resource_group_name):
-                d_msg = "removing storage account {sa_name} under resource group {rgn} ".format(sa_name = sa.name, rgn = self.resource_group_name)
+                d_msg = "removing storage account {} under resource group {} ".format(sa.name, self.resource_group_name)
                 cbdebug(d_msg, True)
                 # async_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
                 # sa_deletions[sa.name] = async_delete
 
             for name in sa_deletions:
                 try:
+                    cbdebug("waiting for {} to be deleted".format(name), True)
                     sa_deletions[name].wait()
                 except Exception, ex:
                     print("error trying to delete storage account: (" + name + ") " + str(ex))
