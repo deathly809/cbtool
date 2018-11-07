@@ -571,6 +571,8 @@ class AzsCmds(CommonCloudFunctions):
                 'network_profile' : network_profile,
                 'storage_profile' : storage_profile
             }
+
+            cbdebug('making call to craete the VM', True)
             self.compute_client.virtual_machines.create_or_update(
                 self.resource_group_name, obj_attr_list["cloud_vm_name"], parameters)
 
