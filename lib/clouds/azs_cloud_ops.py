@@ -101,7 +101,7 @@ from azure.mgmt.network.network_management_client import NetworkManagementClient
 from azure.mgmt.storage.storage_management_client import StorageManagementClient
 
 # KeyVault
-from azure.keyvault import KeyVaultClient
+from azure.keyvault import KeyVaultClient, KeyVaultId
 from azure.mgmt.keyvault import KeyVaultManagementClient
 
 from azure.graphrbac import GraphRbacManagementClient
@@ -1072,7 +1072,7 @@ class AzsCmds(CommonCloudFunctions):
         try:
             if self.keyvault_data_client != None:
                 vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name,'cbtool')
-                secret = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name)
+                secret = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
                 registered_key_pairs[key_name] = secret
         except:
             secret = None
