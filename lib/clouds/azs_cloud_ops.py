@@ -515,6 +515,42 @@ class AzsCmds(CommonCloudFunctions):
             vault = self.kv_mgmt_client.vaults.get(self.resource_group_name, self.vault_name)
             ssh_rsa = 'ssh-rsa ' + self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none).value
 
+            # Networking
+            vnet_name = 'cbtool-vnet'
+            subnet_name = 'cbtool-subnet'
+            ip_config_name = 'cbtool-ip-config'
+            nic_name = 'cbtool-nic'
+
+            self.network_client.virtual_networks.create_or_update(
+                self.resource_group_name,
+                vnet_name,
+                {
+                    'location': self.location,
+                    'address_space': {
+                        'address_prefixes': ['10.0.0.0/16']
+                    }
+                }
+            ).wait()
+
+            subnet = self.network_client.subnets.create_or_update(
+                self.resource_group_name,
+                vnet_name,
+                subnet_name,
+                {'address_prefix': '10.0.0.0/24'}
+            ).result()
+
+            nic = self.network_client.network_interfaces.create_or_update(
+                self.resource_group_name,
+                nic_name,
+                {
+                    'location' : self.location,
+                    'ip_configuration' : {
+                        'name' : ip_config_name,
+                        'subnet' : subnet.id
+                    }
+                }
+            )
+
             os_profile = {
                 'computer_name': vm_name,
                 'admin_username': username,
@@ -533,7 +569,11 @@ class AzsCmds(CommonCloudFunctions):
             }
 
             network_profile = {
-                'network_interfaces' : []
+                'network_interfaces' : [
+                    {
+                        'id' : nic.id
+                    }
+                ]
             }
 
             storage_profile = {
