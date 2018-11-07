@@ -544,7 +544,7 @@ class AzsCmds(CommonCloudFunctions):
                 nic_name,
                 {
                     'location' : self.location,
-                    'ip_configuration' : [
+                    'ip_configurations' : [
                         {
                             'name' : ip_config_name,
                             'subnet' : {
