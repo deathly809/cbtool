@@ -167,8 +167,9 @@ class AzsCmds(CommonCloudFunctions):
 
         # Resource Names
         self.location = ""
-        self.resource_group_name = "cbtool"
-        self.storage_account_name = "cbtool"
+        self.resource_group_name = 'cbtool'
+        self.storage_account_name = 'cbtool'
+        self.vault_name = 'cbtool'
 
         self.subscription_id = None
         self.client_id = None
@@ -509,7 +510,7 @@ class AzsCmds(CommonCloudFunctions):
 
 
             key_name = obj_attr_list['key_name'].replace('_','-')
-            vault = self.kv_mgmt_client.vaults.get(self.resource_group_name, 'cbtool')
+            vault = self.kv_mgmt_client.vaults.get(self.resource_group_name, self.vault_name)
             ssh_rsa = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
 
             os_profile = {
@@ -1075,7 +1076,7 @@ class AzsCmds(CommonCloudFunctions):
         secret = None
         try:
             if self.keyvault_data_client != None:
-                vault = self.kv_mgmt_client.vaults.get(self.resource_group_name,'cbtool')
+                vault = self.kv_mgmt_client.vaults.get(self.resource_group_name, self.vault_name)
                 secret = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
                 registered_key_pairs[key_name] = secret
         except:
@@ -1113,8 +1114,8 @@ class AzsCmds(CommonCloudFunctions):
                         }]
                     }
                 }
-                print("Creating keyvault for resource group " + self.resource_group_name)
-                vault = self.kv_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
+                print("Creating vault named {} for resource group {} at location {}".format(self.vault_name, self.resource_group_name, self.location))
+                vault = self.kv_mgmt_client.vaults.create_or_update(self.resource_group_name, self.vault_name, parameters)
                 print("saving SSH key to keyvault: " + key_name)
                 self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
                 result = True
