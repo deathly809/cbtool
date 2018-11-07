@@ -544,10 +544,14 @@ class AzsCmds(CommonCloudFunctions):
                 nic_name,
                 {
                     'location' : self.location,
-                    'ip_configuration' : {
-                        'name' : ip_config_name,
-                        'subnet' : subnet.id
-                    }
+                    'ip_configuration' : [
+                        {
+                            'name' : ip_config_name,
+                            'subnet' : {
+                                'id' : subnet.id
+                            }
+                        }
+                    ]
                 }
             ).result()
 
