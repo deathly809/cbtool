@@ -1079,9 +1079,10 @@ class AzsCmds(CommonCloudFunctions):
         try:
             if self.keyvault_data_client != None:
                 vault = self.kv_mgmt_client.vaults.get(self.resource_group_name, self.vault_name)
-                secret = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
+                secret = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, '')
                 registered_key_pairs[key_name] = secret
-        except:
+        except Exception, ex:
+            print(str(ex))
             secret = None
         finally:
             print('exit:get_ssh_key')
