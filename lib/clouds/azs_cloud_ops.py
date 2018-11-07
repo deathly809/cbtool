@@ -809,12 +809,26 @@ class AzsCmds(CommonCloudFunctions):
         print("client/app_id={}, tenant_id={}, subscription_id={}".format(self.client_id, self.tenant_id, self.subscription_id))
         print('directory={}'.format(mystack_cloud.endpoints.active_directory_resource_id))
 
-        credentials = ServicePrincipalCredentials(
+        arm_credentials = ServicePrincipalCredentials(
             client_id=self.client_id,
             secret=creds[1],
             tenant=self.tenant_id,
             cloud_environment=mystack_cloud,
             resource = mystack_cloud.endpoints.active_directory_resource_id
+        )
+        kv_dp_creds = ServicePrincipalCredentials(
+            client_id=self.client_id,
+            secret=creds[1],
+            tenant=self.tenant_id,
+            cloud_environment=mystack_cloud,
+            resource = mystack_cloud.endpoints.active_directory_resource_id
+        )
+        rbac_creds = ServicePrincipalCredentials(
+            client_id=self.client_id,
+            secret=creds[1],
+            tenant=self.tenant_id,
+            cloud_environment=mystack_cloud,
+            resource = mystack_cloud.endpoints.active_directory_graph_resource_id
         )
 
         print('setting location to {}'.format(vmc_name))
@@ -825,32 +839,27 @@ class AzsCmds(CommonCloudFunctions):
 
         self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
 
+        # ARM Clients
         print('Creating resource client')
         self.resource_client = ResourceManagementClient(
-            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+            arm_credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
         print('Creating compute client')
         self.compute_client = ComputeManagementClient(
-            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+            arm_credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
         print('Creating storage client')
         self.storage_client = StorageManagementClient(
-            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
+            arm_credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
         print('Creating network client')
         self.network_client = NetworkManagementClient(
-            credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
-
-        print('Creating keyvault data-plane client')
-        self.keyvault_data_client = KeyVaultClient(credentials)
+            arm_credentials, self.subscription_id, base_url=mystack_cloud.endpoints.resource_manager)
         print('Creating key vault management client')
-        self.kv_mgmt_client = KeyVaultManagementClient(credentials, self.subscription_id, base_url = mystack_cloud.endpoints.resource_manager)
+        self.kv_mgmt_client = KeyVaultManagementClient(arm_credentials, self.subscription_id, base_url = mystack_cloud.endpoints.resource_manager)
 
-        rbac_creds = ServicePrincipalCredentials(
-            client_id=self.client_id,
-            secret=creds[1],
-            tenant=self.tenant_id,
-            cloud_environment=mystack_cloud,
-            resource = mystack_cloud.endpoints.active_directory_graph_resource_id
-        )
+        # Dataplane clients
+        print('Creating keyvault data-plane client')
+        self.keyvault_data_client = KeyVaultClient(kv_dp_creds)
 
+        # RBAC client
         print('Creating RBAC client')
         self.rbac_client = GraphRbacManagementClient(rbac_creds, self.tenant_id)
         print("Getting object_id")
