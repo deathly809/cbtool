@@ -513,7 +513,7 @@ class AzsCmds(CommonCloudFunctions):
 
             key_name = obj_attr_list['key_name'].replace('_','-')
             vault = self.kv_mgmt_client.vaults.get(self.resource_group_name, self.vault_name)
-            ssh_rsa = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
+            ssh_rsa = 'ssh-rsa ' + self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
 
             os_profile = {
                 'computer_name': vm_name,
