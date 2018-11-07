@@ -1109,7 +1109,7 @@ class AzsCmds(CommonCloudFunctions):
                         }]
                     }
                 }
-                print("Creating keyvault")
+                print("Creating keyvault for resource group " + self.resource_group_name)
                 vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
                 print("saving SSH key to keyvault: " + key_name)
                 self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
