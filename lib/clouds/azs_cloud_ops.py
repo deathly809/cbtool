@@ -157,7 +157,7 @@ class AzsCmds(CommonCloudFunctions):
         self.network_client = None
 
         self.keyvault_data_client = None
-        self.keyvault_mgmt_client = None
+        self.kv_mgmt_client = None
 
         self.rbac_client = None
 
@@ -509,7 +509,7 @@ class AzsCmds(CommonCloudFunctions):
 
 
             key_name = obj_attr_list['key_name'].replace('_','-')
-            vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name, 'cbtool')
+            vault = self.kv_mgmt_client.vaults.get(self.resource_group_name, 'cbtool')
             ssh_rsa = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
 
             os_profile = {
@@ -803,6 +803,7 @@ class AzsCmds(CommonCloudFunctions):
         self.tenant_id = creds[2]
         self.subscription_id = creds[3]
 
+        print("client/app_id={}, tenant_id={}, subscription_id={}".format(self.client_id, self.tenant_id, self.subscription_id))
 
         credentials = ServicePrincipalCredentials(
             client_id=self.client_id,
@@ -812,12 +813,13 @@ class AzsCmds(CommonCloudFunctions):
             resource = mystack_cloud.endpoints.active_directory_resource_id
         )
 
+        print('setting location to {}'.format(vmc_name))
         self.location = vmc_name
 
         arm_url = mystack_cloud.endpoints.resource_manager
+        print('arm_url={}'.format(arm_url))
 
         self.storage_endpoint_suffix = arm_url.replace(arm_url.split(".")[0], "").strip('./')
-        self.vault_endpoint = 'adminvault.' + self.storage_endpoint_suffix
 
         print('Creating resource client')
         self.resource_client = ResourceManagementClient(
@@ -834,10 +836,10 @@ class AzsCmds(CommonCloudFunctions):
 
         print('Creating keyvault data-plane client')
         self.keyvault_data_client = KeyVaultClient(credentials)
-        print('Creating key vault client')
-        self.keyvault_mgmt_client = KeyVaultManagementClient(credentials, self.subscription_id, base_url = mystack_cloud.endpoints.resource_manager)
+        print('Creating key vault management client')
+        self.kv_mgmt_client = KeyVaultManagementClient(credentials, self.subscription_id, base_url = mystack_cloud.endpoints.resource_manager)
 
-        credentials = ServicePrincipalCredentials(
+        rbac_creds = ServicePrincipalCredentials(
             client_id=self.client_id,
             secret=creds[1],
             tenant=self.tenant_id,
@@ -846,7 +848,8 @@ class AzsCmds(CommonCloudFunctions):
         )
 
         print('Creating RBAC client')
-        self.rbac_client = GraphRbacManagementClient(credentials, self.tenant_id)
+        self.rbac_client = GraphRbacManagementClient(rbac_creds, self.tenant_id)
+        print("Getting object_id")
         self.object_id = next(self.rbac_client.service_principals.list(filter="servicePrincipalNames/any(c: c eq '{}')".format(self.client_id))).object_id
 
         url = urlparse.urlparse(access)
@@ -1071,7 +1074,7 @@ class AzsCmds(CommonCloudFunctions):
         secret = None
         try:
             if self.keyvault_data_client != None:
-                vault = self.keyvault_mgmt_client.vaults.get(self.resource_group_name,'cbtool')
+                vault = self.kv_mgmt_client.vaults.get(self.resource_group_name,'cbtool')
                 secret = self.keyvault_data_client.get_secret(vault.properties.vault_uri, key_name, KeyVaultId.version_none)
                 registered_key_pairs[key_name] = secret
         except:
@@ -1110,7 +1113,7 @@ class AzsCmds(CommonCloudFunctions):
                     }
                 }
                 print("Creating keyvault for resource group " + self.resource_group_name)
-                vault = self.keyvault_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
+                vault = self.kv_mgmt_client.vaults.create_or_update(self.resource_group_name, 'cbtool', parameters)
                 print("saving SSH key to keyvault: " + key_name)
                 self.keyvault_data_client.set_secret(vault.properties.vault_uri, key_name, key_contents)
                 result = True
