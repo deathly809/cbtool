@@ -520,6 +520,8 @@ class AzsCmds(CommonCloudFunctions):
             subnet_name = 'cbtool-subnet'
             ip_config_name = 'cbtool-ip-config'
             nic_name = 'cbtool-nic'
+            pub_ip_name = 'cbtool-nic'
+            dns_label = 'cbtool-dns'
 
             self.network_client.virtual_networks.create_or_update(
                 self.resource_group_name,
@@ -539,6 +541,18 @@ class AzsCmds(CommonCloudFunctions):
                 {'address_prefix': '10.0.0.0/24'}
             ).result()
 
+
+            pub_ip = self.network_client.public_ip_addresses.create_or_update(
+                self.resource_group_name,
+                pub_ip_name,
+                {
+                    'location': self.location,
+                    'dnsSetting' : {
+                        'domainNameLabel' : dns_label
+                    }
+                }
+            ).result()
+
             nic = self.network_client.network_interfaces.create_or_update(
                 self.resource_group_name,
                 nic_name,
@@ -549,11 +563,15 @@ class AzsCmds(CommonCloudFunctions):
                             'name' : ip_config_name,
                             'subnet' : {
                                 'id' : subnet.id
+                            },
+                            'public_ip_address' : {
+                                'id' : pub_ip.id
                             }
                         }
                     ]
                 }
             ).result()
+
 
             os_profile = {
                 'computer_name': vm_name,
