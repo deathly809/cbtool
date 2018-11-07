@@ -719,6 +719,8 @@ class AzsCmds(CommonCloudFunctions):
             _status, _msg = get_default_error_response()
             self.connect(access, credentials, vmc_name)
 
+            self.resource_client.resource_groups.create_or_update(self.resource_group_name)
+
             self.generate_rc(cloud_name, vmc_defaults, '')
 
             _key_pair_found = self.check_ssh_key(
