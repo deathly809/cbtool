@@ -804,6 +804,7 @@ class AzsCmds(CommonCloudFunctions):
         self.subscription_id = creds[3]
 
         print("client/app_id={}, tenant_id={}, subscription_id={}".format(self.client_id, self.tenant_id, self.subscription_id))
+        print('directory={}'.format(mystack_cloud.endpoints.active_directory_resource_id))
 
         credentials = ServicePrincipalCredentials(
             client_id=self.client_id,
