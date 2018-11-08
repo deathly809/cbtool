@@ -222,14 +222,14 @@ class AzsCmds(CommonCloudFunctions):
                                  "cleaning up resources", 0, '')
 
             # Kick off all deletions
-            cbdebug("getting the list of VMs under the resource group {}".format(self.resource_client), True)
+            cbdebug("getting the list of VMs under the resource group {}".format(self.resource_group_name), True)
             vm_deletions = {}
             vms = self.compute_client.virtual_machines.list(self.resource_group_name)
             for vm in vms:
-                d_msg = "removing virtual machine {vm_name} under resource group {rgn} ".format(vm_name = vm.name, rgn = self.resource_group_name)
+                d_msg = "removing virtual machine {}".format(vm.name)
                 cbdebug(d_msg, True)
-                # async_vm_delete  = self.compute_client.virtual_machines.delete(self.resource_group_name, vm.name)
-                # vm_deletions[vm.name] = async_vm_delete
+                async_vm_delete  = self.compute_client.virtual_machines.delete(self.resource_group_name, vm.name)
+                vm_deletions[vm.name] = async_vm_delete
 
             for name in vm_deletions:
                 try:
@@ -238,13 +238,13 @@ class AzsCmds(CommonCloudFunctions):
                 except Exception, ex:
                     print("error trying to delete vm: (" + name + ") " + str(ex))
 
-            cbdebug("getting the list of storage accounts under the resource group {}".format(self.resource_client), True)
+            cbdebug("getting the list of storage accounts under the resource group {}".format(self.resource_group_name), True)
             sa_deletions = {}
             for sa in self.storage_client.storage_accounts.list(self.resource_group_name):
-                d_msg = "removing storage account {} under resource group {} ".format(sa.name, self.resource_group_name)
+                d_msg = "removing storage account {}".format(sa.name)
                 cbdebug(d_msg, True)
-                # async_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
-                # sa_deletions[sa.name] = async_delete
+                async_delete  = self.storage_client.storage_accounts.delete(self.resource_group_name, sa.name)
+                sa_deletions[sa.name] = async_delete
 
             for name in sa_deletions:
                 try:
@@ -635,8 +635,11 @@ class AzsCmds(CommonCloudFunctions):
             }
 
             cbdebug('making call to craete the VM', True)
-            self.compute_client.virtual_machines.create_or_update(
-                self.resource_group_name, obj_attr_list["cloud_vm_name"], parameters).wait()
+            _instance = self.compute_client.virtual_machines.create_or_update(
+                self.resource_group_name, obj_attr_list["cloud_vm_name"], parameters).result()
+
+            obj_attr_list["cloud_vm_uuid"] = '{0}'.format(_instance.id)
+            obj_attr_list["instance_obj"] = _instance
 
             _status = None
             _msg = vm_name + " Created"
@@ -1091,17 +1094,19 @@ class AzsCmds(CommonCloudFunctions):
         '''
         print('enter:get_images')
         try:
+
             _status = 0
+
             _region = self.location
-            _publisher = 'Canonical'
-            _offer = 'UbuntuServer'
-            _sku = "16.04-LTS" # TODO: obj_attr_list["imageid1"]
+            _publisher = 'Microsoft'
+            _offer = 'CBTool'
+            _sku = obj_attr_list["imageid1"]
 
             _candidate_image = self.compute_client.virtual_machine_images.list(
                 _region, _publisher, _offer, _sku)
 
             if _candidate_image:
-                obj_attr_list["imageid1"] = _candidate_image[-1].name
+                obj_attr_list["imageid1"] = _sku
                 obj_attr_list["boot_volume_imageid1"] = _candidate_image[-1].id
                 _status = 0
                 _msg = "Image found"
@@ -1322,3 +1327,4 @@ class AzsCmds(CommonCloudFunctions):
             call/CLI command vmcapture) to be deleted
         '''
         return 0, "NOT SUPPORTED"
+
